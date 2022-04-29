@@ -51,7 +51,7 @@ Suppose we only need to analyze the daily data of France from date `2020-01-01` 
 
 **Step 2.1**: To do so, we initialize ***`StatisticsAnalysis`*** just as below, with parameters of *`'TablePath'`*, *`'DetectedImportOptions'`* (the `DIO` in Step 1) and *`'ImportOptions'`*, the last one with the property to be altered as `'SelectedVariableNames'`. Then we operate it with its method **`ImportTable`**.
 
-**Step 2.2**: To select table, and to get the row indexes, we use the function ***`selectable`***, with outputs `[table, row_index_logical_map, row_index_from_first_to_last]`. The last one would be the one we will need in the next step, with the form like `{[3, 3], [23, 56], [90, 100]}` of class like `1xN cell`. In  ***`selectable`***, we specify the selection requirements with one cell parameter in form of `{Var1, Req1; Var2, Req2}`. When a specific requirement is of multiple parts, just as the `date` in this example, we put it as `{subReq1; subReq2}`. Class ***`arrange`*** states the class of a range, with default boundary `[]` instead of `[)`, `(]` or `()`.
+**Step 2.2**: To select table, and to get the row indexes, we use the function ***`selectable`***, with outputs `[table, row_index_logical_map, row_index_from_first_to_last]`. The last one would be the one we will need in the next step, with the form like `{[3, 3], [23, 56], [90, 100]}` of class like `1xN cell`. In  ***`selectable`***, we specify the selection requirements with one cell parameter in form of `{Var1, Req1; Var2, Req2}`. When a specific requirement is of multiple parts, just as the `date` in this example, we put it as `{subReq1; subReq2}`. Class ***`arange`*** states the class of a range, with default boundary `[]` instead of `[)`, `(]` or `()`.
 
 ```matlab
 [~, ~, FirstLast] = selecttable( ...
@@ -72,7 +72,7 @@ Suppose we only need to analyze the daily data of France from date `2020-01-01` 
 
 **Step 2.3**: Import the Table `CDaily`. Suppose we only need to analyze the variables `new_cases` and `new_vaccinations`. We initialize ***`StatisticsAnalysis`*** with parameters *`'TablePath'`*, *`'DetectedImportOptions'`* the former `DIO`, and *`'ImportOptions'`* with properties of `obj.DetectedImportOptions` to be alted including `'DataLines'` and `'SelectedVariableNames'`. 
 
-**Atention: **Parameter * `'ImportOptions'`*  accepts alteration requirements with multiple parts (e.g. row indexes). When doing so, one need make sure it is a double-nested cell, like `{{[3, 3], [23, 56], [90, 100]}}` or a `1x1 cell` with element of `1xN cell`.
+**Atention: **Parameter  `'ImportOptions'`  accepts alteration requirements with multiple parts (e.g. row indexes). When doing so, one need make sure it is a double-nested cell, like `{{[3, 3], [23, 56], [90, 100]}}` or a `1x1 cell` with element of `1xN cell`.
 
 ```matlab
 CDaily = StatisticsAnalysis( ... Table Import
