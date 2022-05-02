@@ -65,7 +65,7 @@ classdef arange
     %       <a href = "matlab:help arange/uminus">uminus</a>           aka <a href = "matlab:help arange/uminus">-</a>      - unary operation of any ARANGE array
     %       <a href = "matlab:help arange/plus">plus</a>             aka <a href = "matlab:help arange/plus">+</a>      - between any ARANGE arrays with same unit or between ARANGE durations
     %       <a href = "matlab:help arange/minus">minus</a>            aka <a href = "matlab:help arange/minus">-</a>      - between any ARANGE arrays with same unit or between ARANGE durations
-    %       <a href = "matlab:help arange/times">times</a>            aka <a href = "matlab:help arange/times">.*</a>     - between scalr matrix and any ARANGE array
+    %       <a href = "matlab:help arange/times">times</a>            aka <a href = "matlab:help arange/times">.*</a>     - between scalar matrix and any ARANGE array
     %       <a href = "matlab:help arange/mtimes">mtimes</a>           aka <a href = "matlab:help arange/mtimes">*</a>      - between scalar matrix and ARANGE duration or ARANGE scope matrix
     %
     %   Examples:
@@ -296,7 +296,7 @@ classdef arange
             tf = lt(obj2, obj1, intervalFlag);
         end
 
-        function tf = ge(obj1, obj2)
+        function tf = ge(obj1, obj2, intervalFlag)
             if nargin == 2, intervalFlag = false; end
             tf = le(obj2, obj1, intervalFlag);
         end
@@ -586,7 +586,7 @@ classdef arange
     methods(Hidden, Static)
         function obj = loadobj(s)
             if ~isempty(s)
-                obj = arange(0,0);
+                obj = arange();
                 obj.bottom = s.bottom;
                 obj.top = s.top;
                 obj.intervalType = s.intervalType;
@@ -777,8 +777,8 @@ classdef arange
         end
 
         function obj = intervalTypeUpdate(obj, newIntervalType)
-            sizeObj = size(obj); sizeObj = sizeObj(1) * sizeObj(2);
-            if sizeObj > 1, for indx = 1: 1: sizeObj, obj(indx) = intervalTypeUpdate(obj(indx), newIntervalType); end
+            numelInfo = numel(obj);
+            if numelInfo > 1, for indx = 1: 1: numelInfo, obj(indx) = intervalTypeUpdate(obj(indx), newIntervalType); end
             else, obj.intervalType = newIntervalType; end
         end
     end
@@ -799,7 +799,7 @@ classdef arange
             numelInfo1 = numel(obj);
             numelInfo2 = numel(themat);
             if numelInfo1 > 1 && numelInfo2 == 1
-                tf = false(sizeInfo);
+                tf = false(size(obj));
                 for indx = 1: 1: numelInfo1
                     tf(indx) = ni(obj(indx), themat);
                 end
@@ -836,56 +836,76 @@ classdef arange
         end
         
         function obj = value2datetime(obj, varargin)
-            try
-                obj.bottom = datetime(obj.bottom, varargin{:});
-                if ~isempty(obj.top)
-                    obj.top = datetime(obj.top, varargin{:});
+            numelInfo = numel(obj);
+            if numelInfo == 1
+                try
+                    obj.bottom = datetime(obj.bottom, varargin{:});
+                    if ~isempty(obj.top)
+                        obj.top = datetime(obj.top, varargin{:});
+                    end
+                    obj = obj.inputRectify;
+                catch
+                    error('Value convert to datetime failed.')
                 end
-                obj = obj.inputRectify;
-            catch
-                error('Value convert to datetime failed.')
+            elseif numelInfo > 1
+                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
             end
         end
 
         function obj = value4datestr(obj, varargin)
-            try
-                obj.bottom = datestr(obj.bottom, varargin{:});
-                if ~isempty(obj.top)
-                    obj.top = datestr(obj.top, varargin{:});
+            numelInfo = numel(obj);
+            if numelInfo == 1
+                try
+                    obj.bottom = datestr(obj.bottom, varargin{:});
+                    if ~isempty(obj.top)
+                        obj.top = datestr(obj.top, varargin{:});
+                    end
+                catch
+                    error('Value convert to string failed.')
                 end
-            catch
-                error('Value convert to string failed.')
+            elseif numelInfo > 1
+                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
             end
         end
 
         function obj = value2str(obj, varargin)
-            try
-                switch class(obj.bottom)
-                    case 'datetime'
-                        obj = obj.value4datestr(varargin{:});
-                    otherwise
-                        obj.bottom = string(obj.bottom, varargin{:});
-                        if ~isempty(obj.top)
-                            obj.top = string(obj.top, varargin{:});
-                        end
+            numelInfo = numel(obj);
+            if numelInfo == 1
+                try
+                    switch class(obj.bottom)
+                        case 'datetime'
+                            obj = obj.value4datestr(varargin{:});
+                        otherwise
+                            obj.bottom = string(obj.bottom, varargin{:});
+                            if ~isempty(obj.top)
+                                obj.top = string(obj.top, varargin{:});
+                            end
+                    end
+                catch
+                    error('Value convert to string failed.')
                 end
-            catch
-                error('Value convert to string failed.')
+            elseif numelInfo > 1
+                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
             end
         end
 
         function obj = value2duration(obj)
-            try
-                if ~isempty(obj.bottom) && ~isempty(obj.top)
-                    switch obj.unit
-                        case {'seconds', 'second'}, obj.bottom = seconds(obj.bottom); obj.top = seconds(obj.top);
-                        case {'minutes', 'minute'}, obj.bottom = minutes(obj.bottom); obj.top = minutes(obj.top);
-                        case {'hours', 'hour'}, obj.bottom = hours(obj.bottom); obj.top = hours(obj.top);
-                        case {'days', 'day'}, obj.bottom = days(obj.bottom); obj.top = days(obj.top);
+            numelInfo = numel(obj);
+            if numelInfo == 1
+                try
+                    if ~isempty(obj.bottom) && ~isempty(obj.top)
+                        switch obj.unit
+                            case {'seconds', 'second'}, obj.bottom = seconds(obj.bottom); obj.top = seconds(obj.top);
+                            case {'minutes', 'minute'}, obj.bottom = minutes(obj.bottom); obj.top = minutes(obj.top);
+                            case {'hours', 'hour'}, obj.bottom = hours(obj.bottom); obj.top = hours(obj.top);
+                            case {'days', 'day'}, obj.bottom = days(obj.bottom); obj.top = days(obj.top);
+                        end
                     end
+                catch
+                    error('Value convert to duration failed.')
                 end
-            catch
-                error('Value convert to duration failed.')
+            elseif numelInfo > 1
+                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
             end
         end
 
