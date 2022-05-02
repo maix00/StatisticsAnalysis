@@ -3,6 +3,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
     %   Input [table, {FieldName: char/string, Value: numeric/char/string/arange/cell; other_requests}]
 
     %   WANG Yi-yang 28-Apr-2022
+    %   v20220430
 
     RequestSize = size(theRequest, 1);
     if RequestSize > 1
@@ -56,6 +57,9 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
                 Return = strcmp(thisTable.(thisField), thisValue);
             case 'datetime'
                 Return = arange(thisValue, thisValue).ni(thisTable.(thisField));
+            case 'timerange'
+                thisValue = timerange2arange(thisValue);
+                Return = thisValue.ni(thisTable.(thisField));
             case 'arange'
                 Return = thisValue.ni(thisTable.(thisField));
             case 'cell'
