@@ -114,15 +114,58 @@ classdef StatisticsAnalysis < handle
             ips.addParameter('Table', {}, @(x)validateattributes(x, {'table'}, {}));
             ips.addParameter('ImportOptions', {}, @(x)validateattributes(x, {'cell'}, {}));
             ips.addParameter('DetectedImportOptions', {}, @(x)true);
+            ips.addParameter('SelectTableOptions', {}, @(x)true);
+            ips.addParameter('SelectTableBeforeImport', false, @(x)true);
+            ips.addParameter('TagsGenerate', false, @(x)true);
+            ips.addParameter('TagsGenerateOptions', {}, @(x)true);
             ips.parse(varargin{:})
+            %
             obj.TablePath = ips.Results.TablePath;
             obj.Table = ips.Results.Table;
+            % DetectedImportOptions Initialize
+            if isempty(ips.Results.DetectedImportOptions), if ~isempty(obj.TablePath), obj.DetectedImportOptions = detectImportOptions(obj.TablePath); end
+            else, obj.DetectedImportOptions = ips.Results.DetectedImportOptions; end
+            % Import Options
             obj.ImportOptions = ips.Results.ImportOptions;
+            % Select Table and Update ImportOptions before Import the required Table
+            if ~isempty(ips.Results.SelectTableOptions) && ips.Results.SelectTableBeforeImport, obj = obj.DetectedImportOptionsUpdateFromSelectTable(ips.Results.SelectTableOptions); end
+            % Import Options Un-nest
             obj = obj.ImportOptionsUnnest;
-            obj.DetectedImportOptions = ips.Results.DetectedImportOptions;
+            % Tags Generation
+            if ~isempty(ips.Results.TagsGenerateOptions), temp = transpose(ips.Results.TagsGenerateOptions); obj.Table = obj.TagsGenerate(temp{:}).addProp;
+            elseif ips.Results.TagsGenerate, obj.Table = obj.TagsGenerate.addProp; end
         end
+    end
+
+    methods(Access = private)
+        %% Select Table Before Import
+        % ---------------------------------------------------------------
+        function obj = DetectedImportOptionsUpdateFromSelectTable(obj, SelectTableOptions)
+            if ~isempty(SelectTableOptions) && ~isempty(obj.DetectedImportOptions)
+                try obj.DetectedImportOptions.SelectedVariableNames = SelectTableOptions(:,1)'; catch; end
+                try tempTable = readtable(obj.TablePath, obj.DetectedImportOptions); catch; end
+                try tempTable = addprop(tempTable, 'DetectedImportOptions', {'table'}); 
+                    tempTable.Properties.CustomProperties.DetectedImportOptions = obj.DetectedImportOptions; catch; end
+                try [~, ~, FirstLast] = selecttable(tempTable, SelectTableOptions); 
+                    DataLinesOptions = {'DataLines', {FirstLast}}; catch; end
+                if isempty(obj.ImportOptions), obj.ImportOptions = DataLinesOptions;
+                else, DataLinesMapInImportOptions = strcmp(obj.ImportOptions(:,1), 'DataLines');
+                    if ~any(DataLinesMapInImportOptions), obj.ImportOptions = [obj.ImportOptions; DataLinesOptions];
+                    else, RowNum = find(DataLinesMapInImportOptions, 1); OldDataLinesOptions = obj.ImportOptions(RowNum, 2);
+                        obj.ImportOptions(RowNum, :) = UpdateDataLinesOptionsHelper(OldDataLinesOptions, FirstLast);
+                    end
+                end
+            end
+            function New = UpdateDataLinesOptionsHelper(Old, FL)
+                ar = arange(FL).intervalTypeUpdate('closed'); oldar = arange(Old).intervalTypeUpdate('closed'); newar = intersect(oldar, ar);
+                NewFL = {}; for indx = 1: 1: numel(newar), if ~isempty(newar(indx)), NewFL = [NewFL, {[newar(indx).bottom, newar(indx).top]}]; end; end
+                New = {'DataLines', {NewFL}};
+            end
+        end
+    end
 
 
+    methods
          %% Import Options
          % ---------------------------------------------------------------
         function obj = ImportOptionsUnnest(obj)

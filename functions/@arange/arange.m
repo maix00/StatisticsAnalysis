@@ -441,26 +441,9 @@ classdef arange
                     [leftFlag1, rightFlag1] = intervalType2flag(intervalType1);
                     [leftFlag2, rightFlag2] = intervalType2flag(intervalType2);
                     intervalType = flag2intervalType(flagPlus(leftFlag1, leftFlag2), flagPlus(rightFlag1, rightFlag2));
-                    function [leftFlag, rightFlag] = intervalType2flag(intervalType)
-                        switch intervalType
-                            case 'openright', leftFlag = '['; rightFlag = '(';
-                            case 'open', leftFlag = '('; rightFlag = '(';
-                            case 'closed', leftFlag = '['; rightFlag = '[';
-                            case 'openleft', leftFlag = '('; rightFlag = '[';
-                        end
-                    end
                     function additionFlag = flagPlus(flag1, flag2)
                         if all(strcmp({flag1, flag2}, '[')), additionFlag = '[';
                         else, additionFlag = '('; end
-                    end
-                    function intervalType = flag2intervalType(leftFlag, rightFlag)
-                        flag = [leftFlag, rightFlag];
-                        switch flag
-                            case '[(', intervalType = 'openright';
-                            case '((', intervalType = 'open';
-                            case '[[', intervalType = 'closed';
-                            case '([', intervalType = 'openleft';
-                        end
                     end
                 end
             end
@@ -650,6 +633,50 @@ classdef arange
         function tf = intervalIntersects(obj1, obj2)
             tf = ~intervalGreaterThan(obj1, obj2) & ~intervalLessThan(obj1, obj2) & unitSame(obj1, obj2);
         end
+
+        function ints = intersect(obj1, obj2)
+            if isempty(obj1), ints = arange();
+            elseif isempty(obj2), ints = arange();
+            else
+                if ~all(all(unitSame(obj1, obj2))), error('Can not calculate intersection. Check size.');
+                else
+                    if all(size(obj1) == size(obj2)), sizeInfo = size(obj1);
+                        ints = [];
+                        for indx2 = 1: 1: sizeInfo(2)
+                            thisCol = [];
+                            for indx1 = 1: 1: sizeInfo(1)
+                                thisObj1 = obj1(indx1, indx2); thisObj2 = obj2(indx1, indx2);
+                                if intervalIntersects(thisObj1, thisObj2)
+                                    thisUnit = thisObj1.unit;
+                                    bottom1 = thisObj1.bottom; top1 = thisObj1.top; intervalType1 = thisObj1.intervalType;
+                                    bottom2 = thisObj2.bottom; top2 = thisObj2.top; intervalType2 = thisObj2.intervalType;
+                                    [leftFlag1, rightFlag1] = intervalType2flag(intervalType1);
+                                    [leftFlag2, rightFlag2] = intervalType2flag(intervalType2);
+                                    if thisObj2.ni(top1), rightFlag = rightFlag1; topNew = top1;
+                                    else, rightFlag = rightFlag2; topNew = top2; end
+                                    if thisObj2.ni(bottom1), leftFlag = leftFlag1; bottomNew = bottom1;
+                                    else, leftFlag = leftFlag2; bottomNew = bottom2; end
+                                    thisInts = arange(bottomNew, topNew, flag2intervalType(leftFlag, rightFlag), thisUnit);
+                                else
+                                    thisInts = arange();
+                                end
+                                thisCol = [thisCol; thisInts];
+                            end
+                            ints = [ints, thisCol];
+                        end
+                    elseif numel(obj1) == 1
+                        ints = []; sizeInfo = size(obj2);
+                        for indx2 = 1: 1: sizeInfo(2); thisCol = []; 
+                            for indx1 = 1: 1: sizeInfo(1); thisInts = intersect(obj1, obj2(indx1, indx2)); thisCol = [thisCol; thisInts]; end
+                            ints = [ints, thisCol];
+                        end
+                    elseif numel(obj2) == 1, ints = intersect(obj2, obj1);
+                    else
+                        ints = false;
+                    end
+                end
+            end
+        end
     end
     
     methods(Access=private)
@@ -682,8 +709,10 @@ classdef arange
 
         function [obj, optionalCell] = inputConvert(obj, input, newIntervalType)
             optionalCell = {};
-            try
-                if isa(input, 'duration'), if numel(input) == 1, obj.duration = input; else, obj = duration2arange(input); end
+            try if isa(input, 'numeric')
+                    if size(input, 2) == 1, error('Not Covertable to arange');
+                    else, obj = []; for indx = 1: 1: size(input, 1), obj = [obj; arange(input(indx, 1), input(indx, end))]; end; end
+                elseif isa(input, 'duration'), if numel(input) == 1, obj.duration = input; else, obj = duration2arange(input); end
                 elseif isa(input, 'timerange'), obj = timerange2arange(input);
                 elseif isa(input, 'datetime'), obj = datetime2arange(input);
                 elseif isa(input, 'cell')
@@ -775,16 +804,16 @@ classdef arange
             topTraits = endpointTraits(obj.top);
             if topTraits.isInvalid, try if ~bottomTraits.isDatetime || ~bottomTraits.isDuration, obj.top = obj.bottom + addNum; end; catch; end; end
         end
+    end
+    
 
+    methods(Access=public)
         function obj = intervalTypeUpdate(obj, newIntervalType)
             numelInfo = numel(obj);
             if numelInfo > 1, for indx = 1: 1: numelInfo, obj(indx) = intervalTypeUpdate(obj(indx), newIntervalType); end
             else, obj.intervalType = newIntervalType; end
         end
-    end
-    
 
-    methods(Access=public)
         function tf = isarange(obj)
             tf = isa(obj, 'arange');
         end
@@ -1184,4 +1213,23 @@ end
 
 function tf0 = validIntervalTypeRelationshipCheck(intervalType1, intervalType2, validIntervalTypeRelationship)
     tf0 = any(strcmp([intervalType1, intervalType2],validIntervalTypeRelationship));
+end
+
+function intervalType = flag2intervalType(leftFlag, rightFlag)
+    flag = [leftFlag, rightFlag];
+    switch flag
+        case '[(', intervalType = 'openright';
+        case '((', intervalType = 'open';
+        case '[[', intervalType = 'closed';
+        case '([', intervalType = 'openleft';
+    end
+end
+
+function [leftFlag, rightFlag] = intervalType2flag(intervalType)
+    switch intervalType
+        case 'openright', leftFlag = '['; rightFlag = '(';
+        case 'open', leftFlag = '('; rightFlag = '(';
+        case 'closed', leftFlag = '['; rightFlag = '[';
+        case 'openleft', leftFlag = '('; rightFlag = '[';
+    end
 end
