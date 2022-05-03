@@ -12,9 +12,9 @@ path_daily = './data/COVID19/daily_info.csv';
 
 ### **COVID-19 Daily Cases Example** ###
 
-***------------------------------------------------------------ ALL IN ONE STEP ------------------------------------------------------------***
+***---------------------------------- ALL IN ONE STEP ----------------------------------***
 
-**Step 1: _Select Table Rows + Revise detectImportOptions + Import Table + Statistics Aomnalysis + Tags Generation and Properties Apend_** ***ALL IN ONE STEP***
+**Step 1: _Select Table Rows + Revise detectImportOptions + Import Table + Statistics Analysis + Tags Generation and Properties Apend_** ***ALL IN ONE STEP***
 
 ```matlab
 SA = StatisticsAnalysis( ...
