@@ -125,7 +125,7 @@ classdef arange
 
     methods
         function [obj, cl] = arange(bottom_or_others, top_or_intervalType_or_unit, intervalType_or_unit, unit, ~)
-            obj.itt = IntervalType('{}'); cl = {};
+            obj.itt = IntervalType('{}'); cl = {}; if (nargin == 0); obj.nar = true; return; end
             try
                 narginchk(1, 4);
                 % bottom, top, intervalType, unit
@@ -158,7 +158,6 @@ classdef arange
                 elseif (nargin == 1), [obj, cl] = obj.inputConvert(bottom_or_others); % duration or other class
                 end
             catch ME
-                if (nargin == 0); obj.nar = true; return; end
                 error(ME.message);
             end
         end
@@ -481,18 +480,19 @@ classdef arange
     methods(Access=public)
         function tf = intervalLessThan(obj1, obj2)
             tf = operateSizeHelper(obj1, obj2, @intervalLessThan1D, @false);
-            function tf = intervalLessThan1D(obj1, obj2)
-                if obj1.nar || obj2.nar, tf = false;
-                elseif ~isempty(obj1.duration) && ~isempty(obj2.duration), tf = false;
-                elseif ~unitSame(obj1,obj2), tf = false;
-                else
-                    if isequal(obj1.bottom, obj1.top) && isequal(obj2.bottom, obj2.top), tf = (obj1.bottom * obj1.utn < obj2.bottom * obj2.utn);
-                    elseif ~isempty(obj1) && ~isempty(obj2)
-                        validList = {')[', ')(', ']('}; % max1 == max
-                        max1 = max(obj1.bottom, obj1.top);
-                        min2 = min(obj2.bottom, obj2.top);
-                        tf = ( max1 < min2 ) || ( (isequal(max1, min2)) && any(strcmp([obj1.itt.rbt.ri, obj2.itt.lbt.li], validList)));
-                    end
+        end
+
+        function tf = intervalLessThan1D(obj1, obj2)
+            if obj1.nar || obj2.nar, tf = false;
+            elseif ~isempty(obj1.duration) && ~isempty(obj2.duration), tf = false;
+            elseif ~unitSame(obj1,obj2), tf = false;
+            else
+                if isequal(obj1.bottom, obj1.top) && isequal(obj2.bottom, obj2.top), tf = (obj1.bottom * obj1.utn < obj2.bottom * obj2.utn);
+                elseif ~isempty(obj1) && ~isempty(obj2)
+                    validList = {')[', ')(', ']('}; % max1 == max
+                    max1 = max(obj1.bottom, obj1.top);
+                    min2 = min(obj2.bottom, obj2.top);
+                    tf = ( max1 < min2 ) || ( (isequal(max1, min2)) && any(strcmp([obj1.itt.rbt.ri, obj2.itt.lbt.li], validList)));
                 end
             end
         end
@@ -511,27 +511,7 @@ classdef arange
 
         function pd = intersect(obj1, obj2)
             pd = operateSizeHelper(obj1, obj2, @intersect1D, @sz2ar);
-            function pd = intersect1D(obj1, obj2)
-                if (obj1.nar || obj2.nar), pd = NaR;
-                else
-                    if intervalMayIntersect(obj1, obj2)
-                        thisUnit = obj1.unit;
-                        btm1 = obj1.bottom; top1 = obj1.top;
-                        btm2 = obj2.bottom; top2 = obj2.top;
-                        lf1 = obj1.itt.lbt.li; rf1 = obj1.itt.lbt.ri;
-                        lf2 = obj2.itt.lbt.li; rf2 = obj2.itt.lbt.ri; 
-                        % 要么 notni，要么 ni，要么isambiguousin，三者必居其一且只居其一
-                        if ~obj2.notni(top1), rf = rf1; topNew = top1; if (rf ~= '}'), if ((top1 == btm2) && (lf2 == '{')) || ((top1 == top2) && (rf2 == '}')), rf = '}'; end; end
-                        else, rf = rf2; topNew = top2; end
-                        if ~obj2.notni(btm1), lf = lf1; btmNew = btm1; if (lf ~= '{'), if ((btm1 == btm2) && (lf2 == '{')) || ((btm1 == top2) && (rf2 == '}')), rf = '}'; end; end
-                        else, lf = lf2; btmNew = btm2; end
-                        pd = arange(btmNew, topNew, strcat(lf, rf), thisUnit);
-                        if any(strcmp({'{)', '(}', '{}', '[}', '{]'}, pd.itt.iti)), warning('Ambiguous Interval type.'); end
-                    else
-                        pd = NaR;
-                    end
-                end
-            end
+            
         end
     end
     

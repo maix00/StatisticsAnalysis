@@ -22,7 +22,7 @@ function ot = operateSizeHelper(obj1, obj2, fc1, fc2) % fc1: how to operate 1D; 
             case [2, -3], for idx = 1: num; ot(idx) = fc1(obj1(idx), obj2(idx)); end
             case 1, ot = fc1(obj1, obj2);
             case -1, for idx = 1: num; ot(idx) = fc1(obj1, obj2(idx)); end
-            case -2, for idx = 1: num; ot(idx) = fc1(obj2, obj1(idx)); end
+            case -2, for idx = 1: num; ot(idx) = fc1(obj1(idx), obj2); end
         end
     end
 end

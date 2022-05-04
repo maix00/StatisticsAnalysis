@@ -156,9 +156,13 @@ classdef StatisticsAnalysis < handle
                     end
                 end
             end
-            function New = UpdateDataLinesOptionsHelper(Old, FL)
-                ar = arange(FL).intervalTypeUpdate('closed'); oldar = arange(Old).intervalTypeUpdate('closed'); newar = intersect(oldar, ar);
-                NewFL = {}; for indx = 1: 1: numel(newar), if ~isempty(newar(indx)), NewFL = [NewFL, {[newar(indx).bottom, newar(indx).top]}]; end; end
+            function New = UpdateDataLinesOptionsHelper(Old, FL) % Old is a 1x1 cell with [n1 n2] 1x2 int matrix.
+                ITT = IntervalType('closed'); NewFL = cell(size(FL)); od = arange(); od.bottom = Old{1}(1); od.top = Old{1}(2); od.itt = ITT; od.nar = false; tp = arange(); tp.itt = ITT; tp.nar = false;
+                for idx = 1: numel(FL), tp.bottom = FL{idx}(1); tp.top = FL{idx}(2);
+                    [~, btm, top] = intersect1D(tp, od, true); if ~isempty(btm) && ~isempty(top), NewFL{idx} = [btm, top]; else, error('No Rows Selected.'); end
+                end
+                % ar = arange(FL).intervalTypeUpdate('closed'); oldar = arange(Old).intervalTypeUpdate('closed'); newar = intersect(oldar, ar);
+                % NewFL = {}; for indx = 1: 1: numel(newar), if ~isempty(newar(indx)), NewFL = [NewFL, {[newar(indx).bottom, newar(indx).top]}]; end; end
                 New = {'DataLines', {NewFL}};
             end
         end
