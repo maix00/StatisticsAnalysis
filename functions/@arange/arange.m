@@ -345,7 +345,7 @@ classdef arange
         function disp(obj)
             import matlab.internal.display.lineSpacingCharacter
             tab = sprintf('  ');
-            sz = size(obj); tp = strcat(int2str(sz'),[arrayfun(@(x)"x",1:length(sz)-1)';""]); sz2cr = strcat(tp{:}); sizeChar = [sz2cr ' <a href = "matlab:help arange">arange</a> array'];
+            sz = size(obj); tp = strcat(strrep(string(int2str(sz'))," ",""),[arrayfun(@(x)"x",1:length(sz)-1)';""]); sz2cr = strcat(tp{:}); sizeChar = [sz2cr ' <a href = "matlab:help arange">arange</a> array'];
             switch numel(obj)
                 case 1
                     strLeft = obj.lb.li; strRight = obj.rb.ri;
@@ -391,7 +391,8 @@ classdef arange
         end
 
         function pd = abs(obj)
-            pd(size(obj)) = arange; for idx = 1: numel(obj), pd(idx) = abs1D(obj(idx)); end
+            sz = size(obj); sz = arrayfun(@(x){sz(x)}, 1:length(sz));
+            pd(sz{:}) = arange(); for idx = 1: numel(obj), pd(idx) = abs1D(obj(idx)); end
             function pd = abs1D(obj)
                 pd = obj;
                 if pd.scope < 0
@@ -404,7 +405,8 @@ classdef arange
         end
 
         function pd = uminus(obj)
-            pd(size(obj)) = arange; for idx = 1: numel(obj), pd(idx) = uminus1D(obj(idx)); end
+            sz = size(obj); sz = arrayfun(@(x){sz(x)}, 1:length(sz));
+            pd(sz{:}) = arange(); for idx = 1: numel(obj), pd(idx) = uminus1D(obj(idx)); end
             function pd = uminus1D(obj)
                 pd = obj;
                 pd.range{1} = obj.range{2};
@@ -503,24 +505,66 @@ classdef arange
         end
 
         function pd = times(obj1, obj2)
-            pd = operateSizeHelper(obj1, obj2, @times1D, @sz2ar);
-            function pd = times1D(obj1, obj2)
-                if isnumeric(obj1)
-                    if obj1 > 0
-                        pd = obj2;
-                        pd.range{1} = obj1 .* obj2.range{1};
-                        pd.range{2} = obj1 .* obj2.range{2};
-                    elseif obj1 < 0
-                        pd = obj2;
-                        pd.range{1} = obj1 .* obj2.range{2};
-                        pd.range{2} = obj1 .* obj2.range{1};
-                        pd.lb = obj.rb; pd.rb = obj.lb;
-                    else
-                        pd = arange();
+            if isnumeric(obj1)
+                num = numel(obj2);
+                if obj1 > 0
+                    pd = obj2;
+                    for idx = 1: num
+                        pd(idx).range{1} = obj1 .* obj2(idx).range{1};
+                        pd(idx).range{2} = obj1 .* obj2(idx).range{2};
                     end
-                elseif isnumeric(obj2), pd = times1D(obj2, obj1);
-                else, error('Not supported inputs. Expect numeric and arange.')
+                elseif obj1 < 0
+                    pd = obj2;
+                    for idx = 1: num
+                        pd(idx).range{1} = obj1 .* obj2(idx).range{2};
+                        pd(idx).range{2} = obj1 .* obj2(idx).range{1};
+                        pd(idx).lb = obj2(idx).rb; pd.rb = obj2(idx).lb;
+                    end
+                else
+                    pd = arange();
                 end
+            elseif isnumeric(obj2), pd = times(obj2, obj1);
+            else, error('Not supported inputs. Expect numeric and arange.')
+            end
+        end
+
+        function pd = mtimes(obj1, obj2) % stack in a new dimension / one-dimensionalize
+            if ~isa(obj1, 'arange'), obj1 = arange(obj1); end
+            if ~isa(obj2, 'arange'), obj2 = arange(obj2); end
+            num1 = numel(obj1); num2 = numel(obj2);
+            sz1 = size(obj1); sz2 = size(obj2);
+            if all(sz1 == sz2)
+                if sz1(:,end) == 1, EndPoint = length(sz1) - 1;
+                else, EndPoint = length(sz1);
+                end
+                sz = [arrayfun(@(x){sz1(x)},1:EndPoint),{2}];
+                pd(sz{:}) = arange();
+                correctPartStem = arrayfun(@(x){1:sz1(x)},1:EndPoint);
+                correctPart1 = [correctPartStem, {1}];
+                pd(correctPart1{:}) = obj1;
+                correctPart2 = [correctPartStem, {2}];
+                pd(correctPart2{:}) = obj2;
+            else
+                error('Size not match. Expect same size.')
+            end
+        end
+
+        function pd = mpower(obj, int)% stack in a new dimension
+            try
+                int = double(int64(int));
+            catch
+                error('Syntax Error. Expect power of integral.');
+            end
+            sz = size(obj);
+            if sz(:,end) == 1, EndPoint = length(sz) - 1;
+            else, EndPoint = length(sz);
+            end
+            newSZ = [arrayfun(@(x){sz(x)},1:EndPoint),int];
+            pd(newSZ{:}) = arange();
+            correctPartStem = arrayfun(@(x){1:sz(x)},1:EndPoint);
+            for idx = 1: int
+                correctPart = [correctPartStem,{idx}];
+                pd(correctPart{:}) = obj;
             end
         end
 
