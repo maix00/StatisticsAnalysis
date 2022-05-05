@@ -58,10 +58,8 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
             case 'datetime'
                 Return = arange(thisValue, thisValue).ni(thisTable.(thisField));
             case 'timerange'
-                s = saveobj(thisValue);
-                tempValue = arange(); tempValue.nar = false; tempValue.bottom = s.first; tempValue.top = s.last;
-                % thisValue = timerange2arange(thisValue);
-                Return = tempValue.ni(thisTable.(thisField));
+                thisValue = arange(thisValue);
+                Return = thisValue.ni(thisTable.(thisField));
             case 'arange'
                 Return = thisValue.ni(thisTable.(thisField));
             case 'cell'

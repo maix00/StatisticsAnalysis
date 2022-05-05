@@ -31,10 +31,10 @@ function [pd, btmNew, topNew, lf, rf, thisUnit] = intersect1D(obj1, obj2, Proper
         thisUnit = obj1.unit;
 
         % Then copy the bottoms and tops and boundary type images.
-        btm1 = obj1.bottom; top1 = obj1.top;
-        btm2 = obj2.bottom; top2 = obj2.top;
-        lf1 = obj1.itt.lbt.li; rf1 = obj1.itt.rbt.ri;
-        lf2 = obj2.itt.lbt.li; rf2 = obj2.itt.rbt.ri;
+        btm1 = obj1.range{1}; top1 = obj1.range{2};
+        btm2 = obj2.range{1}; top2 = obj2.range{2};
+        lf1 = obj1.lb.li; rf1 = obj1.rb.ri;
+        lf2 = obj2.lb.li; rf2 = obj2.rb.ri;
 
         % Using ~obj2.notni(top1), other than obj2.ni(top1), to make
         % sure ambiguous boudary types are properly handled.
@@ -109,6 +109,6 @@ function [pd, btmNew, topNew, lf, rf, thisUnit] = intersect1D(obj1, obj2, Proper
         if ProperQuickListOutputFlag, pd = []; return; end
 
         % Else, construct the arange.
-        pd = arange(btmNew, topNew, strcat(lf,rf), thisUnit);
+        pd = arange([btmNew, topNew], strcat(lf,rf), thisUnit);
     end
 end
