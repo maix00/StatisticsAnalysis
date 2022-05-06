@@ -46,15 +46,18 @@ classdef arange
     %   Version: v20220505
     
 
-    properties(Hidden)
+    properties(Hidden, SetAccess={?StatisticsAnalysis})
         lb = BoundaryType('{');
         rb = BoundaryType('{');
-        range = cell(1,2);
         nar = false;
     end
 
+    properties(Hidden)
+        range = cell(1,2);
+    end
+ 
     properties
-        unit
+        unit = sym('1');
     end
 
     properties(Dependent)
@@ -83,8 +86,7 @@ classdef arange
                         s = saveobj(in);
                         obj.range = {s.first, s.last};
                         [obj.lb, obj.rb] = IntervalTypeName2BoundaryTypes(s.type);
-                        % To be updated
-                        obj.unit = s.unitOfTime;
+                        obj.unit = UnitRectifyUtility(s.unitOfTime);
                     elseif isa(in, 'cell')
                         optCell = cell(sz); tf = true;
                         for idx = 1: num
@@ -127,19 +129,19 @@ classdef arange
                                     if UniformFlag2
                                         switch flag
                                             % To be updated
-                                            case 'Unit', obj(idx).unit = ITorUnit;
+                                            case 'Unit', obj(idx).unit = UnitRectifyUtility(ITorUnit);
                                             case 'IT', obj(idx).lb = lb; obj(idx).rb = rb;
                                         end
                                     elseif ~UniformFlag2
                                         thisITorUnit = ITorUnit(idx);
                                         [lb, rb] = IntervalTypeName2BoundaryTypes(thisITorUnit);
-                                        if isempty(lb), obj(idx).unit = thisITorUnit;
+                                        if isempty(lb), obj(idx).unit = UnitRectifyUtility(thisITorUnit);
                                         else, obj(idx).lb = lb; obj(idx).rb = rb;
                                         end
                                     end
                                     if (nargin == 3)
-                                        if UniformFlag3, obj(idx).unit = Unit;
-                                        else, obj(idx).unit = Unit(idx);
+                                        if UniformFlag3, obj(idx).unit = UnitRectifyUtility(Unit);
+                                        else, obj(idx).unit = UnitRectifyUtility(Unit(idx));
                                         end
                                     end
                                     obj(idx) = obj(idx).inputRectify;
@@ -152,8 +154,8 @@ classdef arange
                                     obj(idx).rb = ClosedBoundaryType;
                                     if (nargin > 1), warning('Fix Point Output. Check Syntax.'); end
                                     if (nargin == 3)
-                                        if UniformFlag3, obj(idx).unit = Unit;
-                                        else, obj(idx).unit = Unit(idx);
+                                        if UniformFlag3, obj(idx).unit = UnitRectifyUtility(Unit);
+                                        else, obj(idx).unit = UnitRectifyUtility(Unit(idx));
                                         end
                                     end
                                     try if isnar(obj(idx)), obj(idx).nar = true; else, obj(idx).nar = false; end; catch; end
@@ -204,7 +206,11 @@ classdef arange
 
         function val = get.scope(obj)
             if isa(obj.range, 'cell')
-                val = obj.range{2} - obj.range{1};
+                try val = obj.range{2} - obj.range{1}; 
+                catch
+                    if isa(obj.range{1}, 'datetime'), val = 'NaD';
+                    else, val = NaN; end
+                end
             elseif isa(obj.range, 'duration') || isa(obj.range, 'timerange')
                 val = obj.range;
             else
@@ -272,20 +278,27 @@ classdef arange
 
     methods(Access=private)
         function obj = inputRectify(obj)
-            for indx = 1: 1: numel(obj)
-                % fix unitOfTime
-                try if any(validatestring(obj(indx).unit, {'years', 'year', 'quarters', 'quarter', 'months', 'month', 'weeks', 'week', 'days', 'day', 'hours', 'hour', 'minutes', 'minute', 'seconds', 'second'}))
-                    if ~strcmp(obj(indx).unit(end), 's'), obj(indx).unit = [char(string(obj(indx).unit)), 's']; end; end
-                catch
-                end
+            for idx = 1: 1: numel(obj)
                 % endpoints to timetype
-                topTraits = endpointTraits(obj(indx).range{2});
-                try if topTraits.isInvalid, obj(indx).range{2} = obj(indx).range{1}; obj(indx) = obj(indx).endpoints2Timetype(); end
-                catch, obj(indx) = obj(indx).bottomAddToTopFromUnit; end
+                topTraits = endpointTraits(obj(idx).range{2});
+                try if topTraits.isInvalid, obj(idx).range{2} = obj(idx).range{1}; obj(idx) = obj(idx).endpoints2Timetype(); end
+                catch, obj(idx) = obj(idx).bottomAddToTopFromUnit; end
                 % snap endpoints
-                if ~isempty(obj(indx).unit), try obj(indx) = obj(indx).snapEndpointsToUnitOfTime(); catch; end; end
-                % if still not converted to datetime
-                if isa(obj(indx).range{1}, 'char') || isa(obj(indx).range{1}, 'string'), try obj = obj.value2datetime; catch; end; end
+                if ~isempty(obj(idx).unit), try obj(idx) = obj(idx).snapEndpointsToUnitOfTime(); catch; end; end
+                % if still not converted to datetime / duration
+                if isa(obj(idx).range{1}, 'char') || isa(obj(idx).range{1}, 'string'), try obj(idx) = obj(idx).valuefunc(@datetime); catch; end; end
+                if isa(obj(idx).range{1}, 'numeric') || isa(obj(idx).range{2}, 'numeric'), try obj(idx) = obj(idx).valuefunc(DurationFormat2FuncUtility(obj(idx).unit)); catch; end; end
+                % Unit rectify
+                if isa(obj(idx).range{1}, 'duration') && isa(obj(idx).range{2}, 'duration')
+                    format1 = obj(idx).range{1}.Format; format2 = obj(idx).range{2}.Format;
+                    if isequal(format1, format2)
+                        switch format1
+                            case {'s', 'd'}, obj(idx).unit = symunit(format1);
+                            case 'm', obj(idx).unit = symunit('minute');
+                            case 'y', obj(id).unit = symunit('year');
+                        end
+                    end
+                end
                 % check is nar
                 try if isnar(obj), obj.nar = true; else, obj.nar = false; end; catch; end
             end
@@ -306,9 +319,9 @@ classdef arange
 
         function obj = snapEndpointsToUnitOfTime(obj)
             try % DATESHIFT only works if both FIRST and LAST are datetime.
-                obj.range{1} = dateshift(obj.range{1}, 'start', obj.unit);
-                if obj.range{2} ~= dateshift(obj.range{2}, 'end', obj.unit, 'previous') || obj.range{2} == obj.range{1}
-                    obj.range{2}  = dateshift(obj.range{2}, 'start', obj.unit, 'next');
+                obj.range{1} = dateshift(obj.range{1}, 'start', UnitConvertUtility(obj.unit));
+                if obj.range{2} ~= dateshift(obj.range{2}, 'end', UnitConvertUtility(obj.unit), 'previous') || obj.range{2} == obj.range{1}
+                    obj.range{2}  = dateshift(obj.range{2}, 'start', UnitConvertUtility(obj.unit), 'next');
                 end
             catch ME
                 if isa(obj.range{2},'duration') || isa(obj.range{1},'duration') % Duration endpoint(s) not compatible with UNITOFTIME semantics
@@ -321,8 +334,8 @@ classdef arange
                 
         function obj = snapTopBackToUnitOfTime(obj)
             try % DATESHIFT only works if both FIRST and LAST are datetime.
-                obj.range{1} = dateshift(obj.range{1}, 'start', obj.unit);
-                obj.range{2}  = dateshift(obj.range{2},  'start', obj.unit, 'previous');
+                obj.range{1} = dateshift(obj.range{1}, 'start', UnitConvertUtility(obj.unit));
+                obj.range{2}  = dateshift(obj.range{2},  'start', UnitConvertUtility(obj.unit), 'previous');
             catch ME
                 if isa(obj.range{2},'duration') || isa(obj.range{1},'duration') % Duration endpoint(s) not compatible with UNITOFTIME semantics
                     error(message('MATLAB:timerange:UnitOfTimeTypesMismatch'));
@@ -355,8 +368,8 @@ classdef arange
                         else, dispMsg = [strLeft dt2charHelper(obj.range{1}) ', ' dt2charHelper(obj.range{2}) strRight]; end
                     else, dispMsg = [obj.type ' intervalType']; 
                     end
-                    if isempty(obj.unit), ScopeUnit = dt2charHelper(obj.scope); else, ScopeUnit = [dt2charHelper(obj.scope) ' ' obj.unit]; end
-                    dispMsg = ['(' ScopeUnit ')-scope ' dispMsg];
+                    dispMsg = ['(' dt2charHelper(obj.scope) ')-scope ' dispMsg];
+                    if ~isequal(obj.unit, sym('1')), dispMsg = [dispMsg ' ( unit ' char(obj.unit) ' )']; end
                     % display
                     if ~isempty(obj)
                         if obj.nar, disp([tab tab '<a href = "matlab:help arange/arange">arange</a> NaR']);
@@ -371,7 +384,7 @@ classdef arange
             function output = dt2charHelper(input, datetimeformat)
                 output = [];
                 try if isempty(input), output = ''; end; catch; end
-                try if isnan(input), output = '< missing >'; end; catch; end
+                try if isnan(input), output = 'NaN'; end; catch; end
                 if isempty(output), try if isnat(input), output = 'NaT'; end; catch; end; end
                 if nargin == 2, if isempty(output), try output = [char(input, datetimeformat) ' ' input.TimeZone]; catch, output = char(input, datetimeformat); end; end; end
                 if isempty(output), try output = char(string(input)); catch; end; end
@@ -427,9 +440,9 @@ classdef arange
                     if ~isa(obj1, 'arange') || ~isa(obj2, 'arange')
                         try obj = plus(arange(obj1), arange(obj2)); catch; end
                     else
-                        if obj1.nar || obj2.nar, obj = NaR; return; end
+                        if obj1.nar || obj2.nar, obj = arange(); return; end
                         % To be updated
-                        unit1 = obj1.unit; unit2 = obj2.unit; if ~isempty(unit1) && ~isempty(unit2), if ~strcmp(unit1,unit2), error('Unit does not match.'); end; end
+                        unit1 = obj1.unit; unit2 = obj2.unit; if ~isempty(unit1) && ~isempty(unit2), if ~isequal(unit1,unit2), error('Unit does not match.'); end; end
                         abs1 = abs(obj1); abs2 = abs(obj2);
                         obj = obj1; 
                         obj.lb = abs1.lb + abs2.lb; 
@@ -452,9 +465,9 @@ classdef arange
                     if ~isa(obj1, 'arange') || ~isa(obj2, 'arange')
                         try obj = plus(arange(obj1), arange(obj2)); catch; end
                     else
-                        if obj1.nar || obj2.nar, obj = NaR; return; end
+                        if obj1.nar || obj2.nar, obj = arange(); return; end
                         % To be updated
-                        unit1 = obj1.unit; unit2 = obj2.unit; if ~isempty(unit1) && ~isempty(unit2), if ~strcmp(unit1,unit2), error('Unit does not match.'); end; end
+                        unit1 = obj1.unit; unit2 = obj2.unit; if ~isempty(unit1) && ~isempty(unit2), if ~isequal(unit1,unit2), error('Unit does not match.'); end; end
                         abs1 = abs(obj1); abs2 = abs(obj2);
                         obj = obj1; 
                         obj.lb = abs1.lb + abs2.rb; 
@@ -465,7 +478,6 @@ classdef arange
                 end
             end
         end
-
     end
 
     methods(Access=public)
@@ -493,7 +505,7 @@ classdef arange
         end
 
         function tf = unitSame(obj1, obj2)
-            tf = operateSizeHelper(obj1, obj2, @(x,y)(isempty(x.unit)&&isempty(y.unit))||strcmp(x.unit,y.unit), @false);
+            tf = operateSizeHelper(obj1, obj2, @(x,y)(isempty(x.unit)&&isempty(y.unit))||isequal(x.unit,y.unit), @false);
         end
 
         function tf = intervalMayIntersect(obj1, obj2)
@@ -505,26 +517,24 @@ classdef arange
         end
 
         function pd = times(obj1, obj2)
-            if isnumeric(obj1)
-                num = numel(obj2);
-                if obj1 > 0
-                    pd = obj2;
-                    for idx = 1: num
-                        pd(idx).range{1} = obj1 .* obj2(idx).range{1};
-                        pd(idx).range{2} = obj1 .* obj2(idx).range{2};
+            pd = operateSizeHelper(obj1, obj2, @times1D, @sz2ar);
+            function pd = times1D(obj1, obj2)
+                if isnumeric(obj1)
+                    if obj1 > 0
+                        pd = obj2;
+                            pd.range{1} = obj1 .* obj2.range{1};
+                            pd.range{2} = obj1 .* obj2.range{2};
+                    elseif obj1 < 0
+                        pd = obj2;
+                            pd.range{1} = obj1 .* obj2.range{2};
+                            pd.range{2} = obj1 .* obj2.range{1};
+                            pd.lb = obj.rb; pd.rb = obj.lb;
+                    else
+                        pd = arange();
                     end
-                elseif obj1 < 0
-                    pd = obj2;
-                    for idx = 1: num
-                        pd(idx).range{1} = obj1 .* obj2(idx).range{2};
-                        pd(idx).range{2} = obj1 .* obj2(idx).range{1};
-                        pd(idx).lb = obj2(idx).rb; pd.rb = obj2(idx).lb;
-                    end
-                else
-                    pd = arange();
+                    elseif isnumeric(obj2), pd = times1D(obj2, obj1);
+                else, error('Not supported inputs. Expect numeric and arange.')
                 end
-            elseif isnumeric(obj2), pd = times(obj2, obj1);
-            else, error('Not supported inputs. Expect numeric and arange.')
             end
         end
 
@@ -656,103 +666,33 @@ classdef arange
         end
         
         %% Conversion to other classes
-        function obj = value2datetime(obj, varargin)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    obj.range{1} = datetime(obj.range{1}, varargin{:});
-                    if ~isempty(obj.range{2})
-                        obj.range{2} = datetime(obj.range{2}, varargin{:});
-                    end
-                    obj = obj.inputRectify;
-                catch
-                    error('Value convert to datetime failed.')
-                end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
+        function obj = valuefunc(obj, func, varargin)
+            for idx = 1: numel(obj)
+                obj(idx).range{1} = func(obj(idx).range{1}, varargin{:});
+                obj(idx).range{2} = func(obj(idx).range{2}, varargin{:});
             end
         end
-
-        function obj = value4datestr(obj, varargin)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    obj.range{1} = datestr(obj.range{1}, varargin{:});
-                    if ~isempty(obj.range{2})
-                        obj.range{2} = datestr(obj.range{2}, varargin{:});
-                    end
-                catch
-                    error('Value convert to string failed.')
-                end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
-            end
-        end
-
-        function obj = value2str(obj, varargin)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    switch class(obj.range{1})
-                        case 'datetime'
-                            obj = obj.value4datestr(varargin{:});
-                        otherwise
-                            obj.range{1} = string(obj.range{1}, varargin{:});
-                            if ~isempty(obj.range{2})
-                                obj.range{2} = string(obj.range{2}, varargin{:});
-                            end
-                    end
-                catch
-                    error('Value convert to string failed.')
-                end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
-            end
-        end
-
-        function obj = value2duration(obj)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    if ~isempty(obj.range{1}) && ~isempty(obj.range{2})
-                        switch obj.unit
-                            case {'seconds', 'second'}, obj.range{1} = seconds(obj.range{1}); obj.range{2} = seconds(obj.range{2});
-                            case {'minutes', 'minute'}, obj.range{1} = minutes(obj.range{1}); obj.range{2} = minutes(obj.range{2});
-                            case {'hours', 'hour'}, obj.range{1} = hours(obj.range{1}); obj.range{2} = hours(obj.range{2});
-                            case {'days', 'day'}, obj.range{1} = days(obj.range{1}); obj.range{2} = days(obj.range{2});
-                        end
-                    end
-                catch
-                    error('Value convert to duration failed.')
-                end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
-            end
-        end
-
         function tr = arange2timerange(obj)
-            if numel(obj) == 1, tr = [];
-                try
-                    if isempty(obj.unit), try tr = timerange(obj.range{1}, obj.range{2}, obj.type); catch, error('Ambiguous interval type.'); end
-                    elseif ~isempty(obj.range{1}) && ~isempty(obj.range{2}) && any(validatestring(obj.unit, {'years', 'year', 'quarters', 'quarter', 'months', 'month', 'weeks', 'week', 'days', 'day', 'hours', 'hour', 'minutes', 'minute', 'seconds', 'second'}))
-                            if isa(obj.range{1}, 'datetime')
-                                tp = obj.snapTopBackToUnitOfTime(); 
-                                tr = timerange(tp.range{1}, tp.range{2}, tp.unit); 
-                                if any(strcmp(strcat(obj.lb.li, obj.rb.ri),{'[]','()','(]'})), warning('IntervalType change to openright.'); end
+            if numel(obj) == 1
+                if isequal(obj.unit, sym('1')), try tr = timerange(obj.range{1}, obj.range{2}, obj.type); catch, error('Ambiguous interval type.'); end
+                elseif ~isempty(obj.range{1}) && ~isempty(obj.range{2}) && any(validatestring(UnitConvertUtility(obj.unit), {'years', 'quarters', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'}))
+                        if isa(obj.range{1}, 'datetime')
+                            tp = obj.snapTopBackToUnitOfTime(); 
+                            tr = timerange(tp.range{1}, tp.range{2}, UnitConvertUtility(tp.unit)); 
+                            if any(strcmp(strcat(obj.lb.li, obj.rb.ri),{'[]','()','(]'})), warning('IntervalType change to openright.'); end
+                        end
+                        if isempty(tr)
+                            try
+                                tp = obj.valuefunc(DurationFormat2FuncUtility(obj.unit));
+                                if ~isa(tp.range{1}, 'duration'), error('Try value converting to duration failed.');
+                                else, try tr = timerange(tp.range{1}, tp.range{2}, tp.type); catch, error('Ambiguous interval type.'); end; end
+                            catch ME, error(ME.message);
                             end
-                            if isempty(tr)
-                                try
-                                    tp = obj.value2duration;
-                                    if ~isa(tp.range{1}, 'duration'), error('Try value converting to duration failed.');
-                                    else, try tr = timerange(tp.range{1}, tp.range{2}, tp.type); catch, error('Ambiguous interval type.'); end; end
-                                catch ME, error(ME.message);
-                                end
-                            end
-                    elseif ~isempty(obj.range{1}) && ~isempty(obj.range{2}) && isa(obj.range{1}, 'duation')
-                        try tr = timerange(obj.range{1}, obj.range{2}, obj.type); catch, error('Ambiguous interval type.'); end
-                    end
-                catch
-                    if isempty(tr), error('Convert to timerange failed.'); end
+                        end
+                elseif ~isempty(obj.range{1}) && ~isempty(obj.range{2}) && isa(obj.range{1}, 'duation')
+                    try tr = timerange(obj.range{1}, obj.range{2}, obj.type); catch, error('Ambiguous interval type.'); end
+                else
+                    error('Convert to timerange failed.');
                 end
             else
                 tr = cell(size(obj));
@@ -860,8 +800,40 @@ function traits = endpointTraits(in)
     traits.isInvalid = isempty(in);
 end
 
-function tf0 = validIntervalTypeRelationshipCheck(lb1, rb1, lb2, rb2, validIntervalTypeRelationship)
-    tf0 = any(strcmp(strcat(lb1.li, rb1.ri, lb2.li, rb2.ri),validIntervalTypeRelationship));
+function chr = UnitConvertUtility(sym)
+    chr = char(sym);
+    chr = strrep(chr, 'symunit(''year_Julian'')', 'years');
+    chr = strrep(chr, 'symunit(''month_30'')', 'months');
+    chr = strrep(chr, 'symunit(''week'')', 'weeks');
+    chr = strrep(chr, 'symunit(''d'')', 'days');
+    chr = strrep(chr, 'symunit(''min'')', 'minutes');
+    chr = strrep(chr, 'symunit(''s'')', 'seconds');
+end
+
+function NewUnit = UnitRectifyUtility(Unit)
+    if isa(Unit, 'sym'), NewUnit = Unit; return; end
+    if isa(Unit, 'string'), Unit = char(Unit); end
+    try 
+        if any(validatestring(Unit, {'years', 'year', 'quarters', 'quarter', 'months', 'month', 'weeks', 'week', 'days', 'day', 'hours', 'hour', 'minutes', 'minute', 'seconds', 'second'}))
+            if strcmp(Unit(end), 's'), Unit = Unit(1:end-1); end
+            NewUnit = str2symunit(Unit);
+        end
+    catch
+        try
+        NewUnit = str2symunit(Unit);
+        catch
+            try NewUnit = str2sym(Unit); catch; end
+        end
+    end
+end
+
+function func = DurationFormat2FuncUtility(in)
+    switch UnitConvertUtility(in)
+        case 'seconds', func = @seconds;
+        case 'minutes', func = @minutes;
+        case 'hours', func = @hours;
+        case 'days', func = @days;
+    end
 end
 
 function tp = emptyNaRArangeList()
@@ -875,5 +847,5 @@ end
 
 function ar = sz2ar(sz)
     sz = arrayfun(@(x){sz(x)},1:length(sz));
-    ar(sz{:}) = NaR;
+    ar(sz{:}) = arange();
 end

@@ -99,6 +99,10 @@ ans =
                DancingRaio: {'p'  []  []}
 ```
 
+![Performance1
+](./readme/readme_images/figure_-1.png
+)
+
 **Step 2: _Visualization_**
 
 ```matlab
