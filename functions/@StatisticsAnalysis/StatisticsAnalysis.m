@@ -56,6 +56,9 @@ classdef StatisticsAnalysis < handle
         ImportOptions
         DetectedImportOptions % detectImportOptions(TablePath)
         Tags = {};
+    end
+
+    properties(Hidden)
         OneTagFlag = true;
     end
 
@@ -156,9 +159,16 @@ classdef StatisticsAnalysis < handle
                     end
                 end
             end
-            function New = UpdateDataLinesOptionsHelper(Old, FL)
-                ar = arange(FL).intervalTypeUpdate('closed'); oldar = arange(Old).intervalTypeUpdate('closed'); newar = intersect(oldar, ar);
-                NewFL = {}; for indx = 1: 1: numel(newar), if ~isempty(newar(indx)), NewFL = [NewFL, {[newar(indx).bottom, newar(indx).top]}]; end; end
+            function New = UpdateDataLinesOptionsHelper(Old, FL) % Old is a 1x1 cell with [n1 n2] 1x2 int matrix.
+                [LB, RB] = IntervalTypeName2BoundaryTypes('closed'); 
+                NewFL = cell(size(FL)); od = arange(); 
+                od.range = {Old{1}(1), Old{1}(2)}; od.lb = LB; od.rb = RB; od.nar = false; 
+                tp = arange(); tp.lb = LB; tp.rb = RB; tp.nar = false;
+                for idx = 1: numel(FL), tp.range = {FL{idx}(1), FL{idx}(2)};
+                    [~, btm, top] = intersect1D(tp, od, true); if ~isempty(btm) && ~isempty(top), NewFL{idx} = [btm, top]; else, error('No Rows Selected.'); end
+                end
+                % ar = arange(FL).intervalTypeUpdate('closed'); oldar = arange(Old).intervalTypeUpdate('closed'); newar = intersect(oldar, ar);
+                % NewFL = {}; for indx = 1: 1: numel(newar), if ~isempty(newar(indx)), NewFL = [NewFL, {[newar(indx).bottom, newar(indx).top]}]; end; end
                 New = {'DataLines', {NewFL}};
             end
         end

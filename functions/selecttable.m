@@ -58,7 +58,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
             case 'datetime'
                 Return = arange(thisValue, thisValue).ni(thisTable.(thisField));
             case 'timerange'
-                thisValue = timerange2arange(thisValue);
+                thisValue = arange(thisValue);
                 Return = thisValue.ni(thisTable.(thisField));
             case 'arange'
                 Return = thisValue.ni(thisTable.(thisField));
