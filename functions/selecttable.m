@@ -87,7 +87,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
             cmp = cmp(thisLast+1:end);
         end
         try
-            cmpFL = cellfun(@(x) x + thisTable.Properties.CustomProperties.DetectedImportOptions.VariableNamesLine, cmpFL, 'UniformOutput', false);
+            cmpFL = cellfun(@(x) x + thisTable.Properties.CustomProperties.detectedImportOptions.VariableNamesLine, cmpFL, 'UniformOutput', false);
         catch
             % do nothing
         end
