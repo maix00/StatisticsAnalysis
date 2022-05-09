@@ -33,14 +33,13 @@ SA = StatisticsAnalysis( ...
             timerange('2020-01-01', '2020-12-31'); ...
             timerange('2021-04-01', '2022-04-01') ...
             } ... Time Range
-        }, ...
-     'SelectTableBeforeImport', true, ...
+        }, ... % Will Automatically Select Table Before Importing Table
      'TagsGenerateOptions', { ...
         'CustomTagName', {'sexy', [0 1 1]; 'dance', [1 0 0]}; ...
         'TagContinuity', [0 1 1]; ...
         'CustomTagFunction', { ...
             'sexy', 'SexyVariance', @(x,y)tsnanvar(x{:,:})/2; ...
-            'dance', 'DancingRaio', @(x,y)'p' ...
+            'dance', 'DancingRatio', @(x,y)'p' ...
             } ...
         }...
     )
@@ -52,12 +51,11 @@ The output would be:
 SA = 
   StatisticsAnalysis with properties:
 
-                TablePath: './data/COVID19/daily_info.csv'
-                    Table: [680x3 table]
-            ImportOptions: {{3x2 cell}  {3x2 cell}}
-    DetectedImportOptions: [1x1 matlab.io.text.DelimitedTextImportOptions]
                      Tags: [16x3 table]
-               OneTagFlag: 1
+                    Table: [680x3 table]
+                TablePath: './data/COVID19/daily_info.csv'
+            ImportOptions: {2x2 cell}
+    detectedImportOptions: [1x1 matlab.io.text.DelimitedTextImportOptions]
 ```
 
 With Table Properties:
@@ -78,7 +76,7 @@ ans =
         VariableContinuity: []
                   RowNames: {}
    Custom Properties (access using t.Properties.CustomProperties.<name>):
-     DetectedImportOptions: [1x1 matlab.io.text.DelimitedTextImportOptions]
+     detectedImportOptions: [1x1 matlab.io.text.DelimitedTextImportOptions]
                       Tags: [16x3 table]
                       Size: [680 3]
                   TagNames: {{2x1 cell}  {2x1 cell}  {2x1 cell}}
@@ -96,7 +94,7 @@ ans =
                       Mode: {[]  [0]  [369]}
                   Variance: {[]  [5.931609913000527e+09]  [6.399656932431878e+10]}
               SexyVariance: {[]  [2.913312163955580e+09]  [3.199828466215940e+10]}
-               DancingRaio: {'p'  []  []}
+              DancingRatio: {'p'  []  []}
 ```
 
 ![Performance1
