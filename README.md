@@ -48,7 +48,7 @@ SA = StatisticsAnalysis( ...
 The output would be:
 
 ```matlab
-SA = 
+SA =
   StatisticsAnalysis with properties:
 
                      Tags: [16x3 table]
@@ -65,7 +65,7 @@ SA.Table.Properties
 ```
 
 ```matlab
-ans = 
+ans =
   TableProperties with properties:
                Description: ''
                   UserData: []
