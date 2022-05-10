@@ -541,7 +541,6 @@ classdef arange
         function pd = mtimes(obj1, obj2) % stack in a new dimension / one-dimensionalize
             if ~isa(obj1, 'arange'), obj1 = arange(obj1); end
             if ~isa(obj2, 'arange'), obj2 = arange(obj2); end
-            num1 = numel(obj1); num2 = numel(obj2);
             sz1 = size(obj1); sz2 = size(obj2);
             if all(sz1 == sz2)
                 if sz1(:,end) == 1, EndPoint = length(sz1) - 1;

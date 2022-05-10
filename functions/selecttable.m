@@ -9,10 +9,10 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
     if RequestSize > 1
         for index = 1: 1: RequestSize
             [thisTable, thiscmp, ~] = selecttable(thisTable, theRequest(index, :));
-            if index > 1
-                lastcmp(lastcmp) = thiscmp;
-            elseif index == 1
+            if index == 1
                 lastcmp = thiscmp;
+            else
+                lastcmp(lastcmp) = thiscmp;
             end
             if index == RequestSize
                 cmpFL = FirstLastFindTrue(lastcmp);

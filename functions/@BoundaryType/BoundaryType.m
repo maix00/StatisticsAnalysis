@@ -69,9 +69,6 @@ classdef BoundaryType < handle
             end
         end
 
-        function itt = BoundaryTypes2IntervalType(obj1, obj2)
-            itt = IntervalType(strcat(obj1.li,obj2.ri));
-        end
     end
 end
 
