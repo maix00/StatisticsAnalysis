@@ -1,6 +1,6 @@
 # StatisticsAnalysis
 
-
+Note: This repository was initially intended for a course project for COMP110031@ Fudan University. See [this project page](https://github.com/users/maix00/projects/1).
 
 ## Part I:  Table Import and Visualization
 
