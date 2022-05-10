@@ -1,44 +1,16 @@
 classdef arange
     % ARANGE Arange is a class of range data.
-    %   R = ARANGE(bottom, top, intervalType, unit)
-    %   R = ARANGE(bottom, top, intervalType)
-    %   R = ARANGE(bottom, top, unit)
-    %   R = ARANGE(bottom, unit)
-    %   R = ARANGE(bottom, top)
-    %   R = ARANGE(duration, intervalType)
-    %   R = ARANGE(duration)
-    %   R = ARANGE(timerange_OR_cell_OR_datetime_OR_duration)
-    %
-    %   Property intervalType is one of the following:
-    %       'open'
-    %       'closed'
-    %       'openleft'  = 'closedright'
-    %       'openright' = 'closedleft'
-    %
-    %   Property unit can be set customly. When specified as the following, ARANGE would automatically interact with <a href = "matlab:help timerange">timerange</a>
-    %    and <a href = "matlab:help duration">duration</a>.
-    %       'year'      or    'years'
-    %       'quarter'   or    'quarters'
-    %       'month'     or    'months'
-    %       'week'      or    'weeks'
-    %       'day'       or    'days'
-    %       'hour'      or    'hours'
-    %       'minute'    or    'minutes'
-    %       'second'    or    'seconds'
+    %   R = ARANGE(M_by_xxx_by_2, intervalType, unit)
+    %   R = ARANGE(M_by_xxx_by_2, intervalType)
+    %   R = ARANGE(M_by_xxx_by_2, unit)
     % 
-    %   Property scope would be automatically calculated according to rectified properties bottom and top.
+    %   Properties: range, starts, ends, scope, unit
     % 
     % ARANGE methods and functions:
     %   Construction and conversion as a whole:
     %       <a href = "matlab:help arange/arange">arange</a>
-    %           - <a href = "matlab:help timerange2arange">timerange2arange</a>
-    %           - <a href = "matlab:help duration2arange">duration2arange</a>
-    %           - <a href = "matlab:help datetime2arange">datetime2arange</a>
     %       <a href = "matlab:help isarange">isarange</a>
     %       <a href = "matlab:help arange2timerange">arange2timerange</a> aka <a href = "matlab:help ar2tr">ar2tr</a>
-    %       <a href = "matlab:help arange2duration">arange2duration</a>  aka <a href = "matlab:help ar2dr">ar2dr</a>
-    %       <a href = "matlab:help arange2datetime">arange2datetime</a>  aka <a href = "matlab:help ar2dt">ar2dt</a>
-    %       <a href = "matlab:help arange2cell">arange2cell</a>
     %
     %   Value convertion:
     %       <a href = "matlab:help value2str">value2str</a>
@@ -48,736 +20,311 @@ classdef arange
     %
     %   Relationship:
     %       <a href = "matlab:help arange/isempty">isempty</a>                     - 0x0, or contains NaN and NaT, or no limits, or not closed intervalType on one value
-    %       <a href = "matlab:help arange/issame">issame</a>                      - isequal or both isempty
+    %       <a href = "matlab:help arange/issame">issame</a>                      - isequal return 1, intersects return 2
     %       <a href = "matlab:help arange/isinarange">isinarange</a>       aka <a href = "matlab:help arange/ni">ni</a>     - check whether an instance is between the bottom and top limits of the ARANGE
-    %       <a href = "matlab:help arange/eq">eq</a>               aka <a href = "matlab:help arange/eq">==</a>     - <a href = "matlab:help arange/thesame">thesame</a> or optional, <a href = "matlab:help arange/intervalIntersects">intervalIntersects</a>
-    %       <a href = "matlab:help arange/ne">ne</a>               aka <a href = "matlab:help arange/ne">~=</a>     - not <a href = "matlab:help arange/thesame">thesame</a> or optional, not <a href = "matlab:help arange/intervalIntersects">intervalIntersects</a>
-    %       <a href = "matlab:help arange/lt">lt</a>               aka <a href = "matlab:help arange/lt"><</a>      - whether the former's scope is less than or equals the latter's (when equal, 
-    %                                     smaller intervalType), or optional, interval whole comparison without intersection
-    %                                     [Require Same Unit]
-    %       <a href = "matlab:help arange/le">le</a>               aka <a href = "matlab:help arange/le"><=</a>     - whether the former's scope is less than or equals the latter's, or optional, interval
-    %                                     whole comparison with intersection [Require Same Unit]
+    %       <a href = "matlab:help arange/eq">eq</a>               aka <a href = "matlab:help arange/eq">==</a>     - same as <a href = "matlab:help arange/intervalMayIntersect">intervalMayIntersect</a>
+    %       <a href = "matlab:help arange/ne">ne</a>               aka <a href = "matlab:help arange/ne">~=</a>     - not <a href = "matlab:help arange/intervalMayIntersect">intervalMayIntersect</a>
+    %       <a href = "matlab:help arange/lt">lt</a>               aka <a href = "matlab:help arange/lt"><</a>      - true when the latter fully surpasses the former
+    %       <a href = "matlab:help arange/le">le</a>               aka <a href = "matlab:help arange/le"><=</a>     - true when surpassing or may-intersecting
     %       <a href = "matlab:help arange/gt">gt</a>               aka <a href = "matlab:help arange/gt">></a>      - likewise
     %       <a href = "matlab:help arange/ge">ge</a>               aka <a href = "matlab:help arange/ge">>=</a>     - likewise
     %
     %   Calculations:
-    %       <a href = "matlab:help arange/abs">abs</a>                         - unary operation of any ARANGE array
-    %       <a href = "matlab:help arange/uminus">uminus</a>           aka <a href = "matlab:help arange/uminus">-</a>      - unary operation of any ARANGE array
-    %       <a href = "matlab:help arange/plus">plus</a>             aka <a href = "matlab:help arange/plus">+</a>      - between any ARANGE arrays with same unit or between ARANGE durations
-    %       <a href = "matlab:help arange/minus">minus</a>            aka <a href = "matlab:help arange/minus">-</a>      - between any ARANGE arrays with same unit or between ARANGE durations
-    %       <a href = "matlab:help arange/times">times</a>            aka <a href = "matlab:help arange/times">.*</a>     - between scalar matrix and any ARANGE array
-    %       <a href = "matlab:help arange/mtimes">mtimes</a>           aka <a href = "matlab:help arange/mtimes">*</a>      - between scalar matrix and ARANGE duration or ARANGE scope matrix
-    %
-    %   Examples:
-    %
-    %   >> A = arange('2022-04-08', "second"); disp(A);
-    %           a range [ 08-Apr-2021 00:00:00 , 08-Apr-2021 00:00:01 ) in seconds, which has scope 00:00:01
-    %   >> B = arange(minutes(3), minutes(5), 'closed').ar2tr; disp(B);
-    %	        timetable timerange subscript:
-	%	            Select timetable rows with times in the closed interval:
-	%	            [3 min, 5 min]
-    %   >> C = arange('now','tomorrow','quarters'); disp(C);
-    %           a range [ 01-Apr-2022 00:00:00 , 01-Jul-2022 00:00:00 ) in quarters, which has scope 2184:00:00
-    %   >> D = arange.empty; E = arange(NaN, NaN); F = arange(NaT, NaT); tf = [D E] == [D F]; disp(tf);
-    %           1
-    %   >> G = arange(1,3,'closed','pigs'); H = arange(2,3,'openleft','pigs'); tf1 = G <= H; tf2 = le(G, H, true); disp([tf1 tf2]);
-    %           0    1
-    %       The former compares the length of scope. The latter compares the intersection and the surpassing of intervals.
-    %   >> disp([[G+H; G-H], [3 4].*[G;H]]);
-    %         2x2 arange array
-    %         column1
-    %           a range ( 3 , 6 ] in pigs, which has scope 3
-    %           a range [ -2 , 1 ) in pigs, which has scope 3
-    %         column2
-    %           a range [ 3 , 9 ] in pigs/3, which has scope 6
-    %           a range ( 8 , 12 ] in pigs/4, which has scope 4
-    %   >> disp([G,H]*[4 3; 2 1])
-    %           10  7
-    %   >> disp([3;2]*A)
-    %       2x1 arange array
-    %       column1
-    %           a range of openright duration 00:00:03, which has scope 00:00:03
-    %           a range of openright duration 00:00:02, which has scope 00:00:02
-
+    %       <a href = "matlab:help arange/abs">abs</a>                         - unary operation, return rectified aranges
+    %                                     e.g. [2,3) -> [2,3); (3,2] -> [2,3) 
+    %       <a href = "matlab:help arange/uminus">uminus</a>           aka <a href = "matlab:help arange/uminus">-</a>      - unary operation, flip endpoints
+    %                                     e.g. [2,3) -> (3,2]
+    %       <a href = "matlab:help arange/plus">plus</a>             aka <a href = "matlab:help arange/plus">+</a>      - endpoints and boundary plus
+    %       <a href = "matlab:help arange/minus">minus</a>            aka <a href = "matlab:help arange/minus">-</a>      - endpoints cross minus and boundary plus (range minus)
+    %                                     e.g. [2,3) - (3,4] = [2,3) + [-4,-3) = [-2,0)
+    %       <a href = "matlab:help arange/times">times</a>            aka <a href = "matlab:help arange/times">.*</a>     - value times
+    %       <a href = "matlab:help arange/mtimes">mtimes</a>           aka <a href = "matlab:help arange/mtimes">*</a>      - cat
+    %       <a href = "matlab:help arange/intersect">intersect</a>                   - intersection
     %  %-------------------------------------------------------------------
     %    Author: WANG Yi-yang
     %      Date: 27-Apr-2022
-    %   Version: v20220502
+    %   Version: v20220505
     
 
-    properties(Transient, Access='public')
-        bottom = [];
-        top = [];
-        intervalType = 'openright';
-        unit = [];
-        duration = [];
-        scope = [];
+    properties(Hidden, SetAccess={?StatisticsAnalysis})
+        lb = BoundaryType('{');
+        rb = BoundaryType('{');
+        nar = false;
+    end
+
+    properties(Hidden)
+        range = cell(1,2);
+    end
+ 
+    properties
+        unit = sym('1');
+    end
+
+    properties(Dependent)
+        starts
+        ends
+        type
+        scope
     end
 
     methods
-        function [obj, optionalCell] = arange(bottom_or_others, top_or_intervalType_or_unit, intervalType_or_unit, unit, ~)
-            optionalCell = {};
-            try
-                narginchk(1, 4);
-                validIntervalType = ["openright" "closedleft" "openleft" "closedright" "open" "closed"];
-                % bottom, top, intervalType, unit
-                if (nargin == 4), obj.bottom = bottom_or_others; obj.top = top_or_intervalType_or_unit; obj.intervalType = intervalType_or_unit; obj.unit = unit;
-                    obj = obj.inputRectify;
-                elseif (nargin == 3) 
-                    % bottom, top, intervalType
-                    % bottom, intervalType, unit
-                    % bottom, top, unit
-                    if any(strcmp(intervalType_or_unit, validIntervalType))
-                        obj.bottom = bottom_or_others; obj.top = top_or_intervalType_or_unit; obj.intervalType = intervalType_or_unit;
-                    elseif any(strcmp(top_or_intervalType_or_unit, validIntervalType))
-                            obj.bottom = bottom_or_others; obj.intervalType = obj.top_or_intervalType_or_unit; obj.unit = intervalType_or_unit;
-                    else, obj.bottom = bottom_or_others; obj.top = top_or_intervalType_or_unit; obj.unit = intervalType_or_unit; 
-                    end
-                    obj = obj.inputRectify;
-                elseif (nargin == 2)
-                    % duration or other class, intervalType
-                    % bottom, unit
-                    % bottom, top
-                    if any(strcmp(top_or_intervalType_or_unit, validIntervalType)), obj = obj.inputConvert(bottom_or_others, top_or_intervalType_or_unit);
-                    else
-                       tf1 = ~strcmp(class(bottom_or_others),class(top_or_intervalType_or_unit)); tf2 = false; %try tf2 = ~tf1 && (length(bottom_or_others) ~= length(top_or_intervalType_or_unit)); catch; end
-                       if tf1 || tf2, obj.bottom = bottom_or_others; obj.unit = top_or_intervalType_or_unit; 
-                       else, obj.bottom = bottom_or_others; obj.top = top_or_intervalType_or_unit; end
-                    end
-                    obj = obj.inputRectify;
-                elseif (nargin == 1), [obj, optionalCell] = obj.inputConvert(bottom_or_others); % duration or other class
-                end
-            catch ME
-                if (nargin == 0), return; end
-                error(ME.message);
-            end
-        end
-    end
-
-    methods(Hidden)        
-        function disp(obj)
-            import matlab.internal.display.lineSpacingCharacter
-            tab = sprintf('  ');
-            sizeInfo = size(obj);
-            sizeChar = [char(string(sizeInfo(1))) 'x' char(string(sizeInfo(2))) ' <a href = "matlab:help arange">arange</a> array'];
-            if all(sizeInfo==[1 1])
-                switch obj.intervalType
-                    case 'openright', stringLeft = '['; stringRight = ')';
-                    case 'open', stringLeft = '('; stringRight = ')';
-                    case 'closed', stringLeft = '['; stringRight = ']';
-                    case 'openleft', stringLeft = '('; stringRight = ']';
-                end
-                datetimeformat = settings().matlab.datetime.DefaultFormat.ActiveValue;
-                if ~isempty(obj.bottom)
-                    if isa(obj.bottom,'datetime'), dispMsg = [stringLeft ' ' convert2CharHelper(obj.bottom, datetimeformat) ', ' convert2CharHelper(obj.top, datetimeformat) stringRight];
-                    else, dispMsg = [stringLeft ' ' convert2CharHelper(obj.bottom) ' , ' convert2CharHelper(obj.top) ' ' stringRight];
-                    end
-                else, dispMsg = obj.intervalType; 
-                end
-                if ~isempty(obj.duration), dispMsg = ['of ' dispMsg ' duration ' convert2CharHelper(obj.duration)]; end
-                if ~isempty(obj.unit), dispMsg = [dispMsg ' in ' convert2CharHelper(obj.unit)]; end
-                if ~isempty(obj.scope), dispMsg = [dispMsg ', which has scope ' convert2CharHelper(obj.scope)]; end
-                if ~isempty(obj), disp([tab tab 'a range ' dispMsg]); else, disp([tab tab 'an <a href = "matlab:help arange/isempty">empty</a> range ' dispMsg]); end
+        function [obj, optCell] = arange(in, ITorUnit, Unit, ~)
+            if (nargin == 0), obj.nar = true; return;
             else
-                disp([tab sizeChar lineSpacingCharacter])
-                for indx2 = 1: 1: sizeInfo(2)
-                    disp([tab 'column' char(string(indx2))]);
-                    for indx1 = 1: sizeInfo(1), disp(obj(indx1, indx2)); end
-                end
-            end
-            function output = convert2CharHelper(input, datetimeformat)
-                output = [];
-                try if isempty(input), output = '< missing >'; end; catch; end
-                try if isnan(input), output = 'NaN'; end; catch; end
-                if isempty(output), try if isnat(input), output = 'NaT'; end; catch; end; end
-                if nargin == 2, if isempty(output), try output = [char(input, datetimeformat) ' ' input.TimeZone]; catch output = char(input, datetimeformat); end; end; end
-                if isempty(output), try output = char(string(input)); catch; end; end
-                if isempty(output), output = ''; end
-            end
-        end
-        function s = saveobj(obj)
-            s = struct;
-            if ~isempty(obj)
-                sizeInfo = size(obj);
-                s = [];
-                for indx2 = 1: 1: sizeInfo(2)
-                    thisCol = [];
-                    for indx1 = 1: 1: sizeInfo(1)
-                        t = struct;
-                        thisObj = obj(indx1, indx2);
-                        t.bottom = thisObj.bottom;
-                        t.top  = thisObj.top;
-                        t.intervalType = thisObj.intervalType;
-                        t.unit = thisObj.unit;
-                        t.duration = thisObj.duration;
-                        t.scope = thisObj.scope;
-                        thisCol = [thisCol; t];
-                    end
-                    s = [s, thisCol];
-                end
-            end
-        end
-
-        function gp = gap(obj)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                gp = obj.scope;
-            elseif numelInfo > 1
-                sizeInfo = size(obj);
-                gp = cell(sizeInfo);
-                for indx = 1: 1: numelInfo
-                    gp{indx} = obj(indx).scope;
-                end
-            end
-        end
-
-        function tf = isempty(obj)
-            tempArange = arange();
-            tf1 = isequal(obj, tempArange);
-            tempArange = tempArange.intervalTypeUpdate('open');
-            tf2 = isequal(obj, tempArange);
-            tempArange = tempArange.intervalTypeUpdate('closed');
-            tf3 = isequal(obj, tempArange);
-            tempArange = tempArange.intervalTypeUpdate('openleft');
-            tf4 = isequal(obj, tempArange);
-            tf5 = isequal(obj, arange.empty);
-            tf = any([tf1 tf2 tf3 tf4 tf5]);
-            if ~tf, try if isnan(obj.bottom) || isnan(obj.top), tf = true; end; catch; end; end
-            if ~tf, try if isnat(obj.bottom) || isnat(obj.top), tf = true; end; catch; end; end
-            if ~tf, try if isempty(obj.duration) && isequal(obj.bottom, obj.top) && ~strcmp(obj.intervalType, 'closed'), tf = true; end; catch; end; end
-        end
-
-        function tf = lt(obj1, obj2, intervalFlag)
-            if nargin == 2, intervalFlag = false; end
-            if ~intervalFlag
-                if all(size(obj1) == size(obj2)), numelInfo = numel(obj1);
-                    tf = false(size(obj1));
-                    validIntervalTypeRelationship = {'openopenleft', 'openopenright', 'openclosed', 'openrightclosed', 'openleftclosed'};
-                    for indx = 1: 1: numelInfo
-                        tf(indx) = compareLength1DLessThan(obj1(indx), obj2(indx), validIntervalTypeRelationship);
-                    end
-                elseif numel(obj1) == 1
-                    tf = false(size(obj2)); for indx = 1: 1: numel(obj2), tf(indx) = lt(obj1, obj2(indx), intervalFlag); end
-                elseif numel(obj2) == 1
-                    tf = false(size(obj1)); for indx = 1: 1: numel(obj1), tf(indx) = lt(obj1(indx), obj2, intervalFlag); end
-                else
-                    tf = false;
-                end
-                if all([isnumeric(obj1), isnumeric(obj2)]), tf = tf & unitSame(obj1, obj2); end
-            else
-                tf = intervalLessThan(obj1, obj2);
-            end
-        end
-
-        function tf = le(obj1, obj2, intervalFlag)
-            if nargin == 2, intervalFlag = false; end
-            if ~intervalFlag
-                if all(size(obj1) == size(obj2)), numelInfo = numel(obj1);
-                    tf = false(size(obj1));
-                    validIntervalTypeRelationship = {'openopen', 'openopenleft', 'openopenright', 'openclosed', 'openrightopenright', 'openrightclosed', 'openleftopenleft', 'openleftclosed', 'closedclosed'};
-                    for indx = 1: 1: numelInfo
-                        tf(indx) = compareLength1DLessEqual(obj1(indx), obj2(indx), validIntervalTypeRelationship);
-                    end
-                elseif numel(obj1) == 1
-                    tf = false(size(obj2)); for indx = 1: 1: numel(obj2), tf(indx) = lt(obj1, obj2(indx), intervalFlag); end
-                elseif numel(obj2) == 1
-                    tf = false(size(obj1)); for indx = 1: 1: numel(obj1), tf(indx) = lt(obj1(indx), obj2, intervalFlag); end
-                else
-                    tf = false;
-                end
-                if all([isnumeric(obj1), isnumeric(obj2)]), tf = tf & unitSame(obj1, obj2); end
-            else
-                tf = intervalLessThan(obj1, obj2) | intervalIntersects(obj1, obj2);
-            end
-        end
-
-        function tf = gt(obj1, obj2, intervalFlag)
-            if nargin == 2, intervalFlag = false; end
-            tf = lt(obj2, obj1, intervalFlag);
-        end
-
-        function tf = ge(obj1, obj2, intervalFlag)
-            if nargin == 2, intervalFlag = false; end
-            tf = le(obj2, obj1, intervalFlag);
-        end
-        
-        function tf = eq(obj1, obj2, intervalFlag)
-            if nargin == 2, intervalFlag = false; end
-            if ~intervalFlag
-                tf = issame(obj1, obj2);
-            else
-                tf = intervalIntersects(obj1, obj2);
-            end
-        end
-
-        function tf = ne(obj1, obj2, intervalFlag)
-            if nargin == 2, intervalFlag = false; end
-            tf = ~eq(obj1, obj2, intervalFlag);
-        end
-
-        function tempObj = abs(obj)
-            sizeInfo = size(obj);
-            tempObj = [];
-            for indx2 = 1: 1: sizeInfo(2)
-                thisCol = [];
-                for indx1 = 1: 1: sizeInfo(1)
-                    thisObj = abs1D(obj(indx1, indx2));
-                    thisCol = [thisCol; thisObj];
-                end
-                tempObj = [tempObj, thisCol];
-            end
-            function tempObj = abs1D(obj)
-                tempObj = [];
-                if ~isempty(obj.duration)
-                    if obj.duration < 0
-                        obj.duration = - obj.duration;
-                        switch obj.intervalType
-                            case 'openright', obj.intervalType = 'openleft';
-                            case 'openleft', obj.intervalType = 'openright';
+                try
+                    narginchk(1,3);
+                    sz = size(in); num = numel(in);
+                    UniformFlag2 = []; UniformFlag3 = [];
+                    if (nargin > 1)
+                        UniformFlag2 = CheckSettingsSize(ITorUnit, num);
+                        if UniformFlag2, [lb, rb] = IntervalTypeName2BoundaryTypes(ITorUnit);
+                            if isempty(lb), flag = 'Unit'; else, flag = 'IT'; end
                         end
+                        if (nargin == 3), UniformFlag3 = CheckSettingsSize(Unit, num); end
                     end
-                    if ~isempty(obj.scope)
-                        obj.scope = - obj.scope;
-                    end
-                    tempObj = obj;
-                else
-                    if ~isempty(obj.scope)
-                        if obj.scope < 0
-                            tempObj = obj;
-                            tempObj.bottom = obj.top;
-                            tempObj.top = obj.bottom;
-                            tempObj.scope = - obj.scope;
-                            switch obj.intervalType
-                                case 'openright', tempObj.intervalType = 'openleft';
-                                case 'openleft', tempObj.intervalType = 'openright';
+                    if isa(in, 'timerange')
+                        s = saveobj(in);
+                        obj.range = {s.first, s.last};
+                        [obj.lb, obj.rb] = IntervalTypeName2BoundaryTypes(s.type);
+                        obj.unit = UnitRectifyUtility(s.unitOfTime);
+                    elseif isa(in, 'cell')
+                        optCell = cell(sz); tf = true;
+                        for idx = 1: num
+                            if (nargin == 1)
+                                tp = arange(in{idx}{:});
+                            else
+                                if (nargin == 2)
+                                    if UniformFlag2
+                                        tp = arange(in{idx}, ITorUnit);
+                                    else, try tp = arange(in{idx}, ITorUnit{idx}); catch, tp = arange(in{idx}, ITorUnit(idx)); end
+                                    end
+                                elseif (nargin == 3)
+                                    if UniformFlag2 && UniformFlag3
+                                        tp = arange(in{idx}, ITorUnit, Unit);
+                                    elseif UniformFlag2 && ~UniformFlag3
+                                        try tp = arange(in{idx}, ITorUnit, Unit{idx}); catch, tp = arange(in{idx}, ITorUnit, Unit(idx)); end
+                                    elseif ~UniformFlag2 && UniformFlag3
+                                        try tp = arange(in{idx}, ITorUnit{idx}, Unit); catch, tp = arange(in{idx}, ITorUnit(idx), Unit(idx)); end
+                                    else
+                                        try tp = arange(in{idx}, ITorUnit{idx}, Unit{idx}); catch; end
+                                        try tp = arange(in{idx}, ITorUnit{idx}, Unit(idx)); catch; end
+                                        try tp = arange(in{idx}, ITorUnit(idx), Unit{idx}); catch; end
+                                        try tp = arange(in{idx}, ITorUnit(idx), Unit(idx)); catch; end
+                                    end
+                                end
                             end
+                            if isa(tp, 'cell'), tf = false; end
+                            optCell{idx} = tp;
                         end
-                    end
-                end
-                if isempty(tempObj), tempObj = obj; end
-            end
-        end
-
-        function tempObj = uminus(obj)
-            sizeInfo = size(obj);
-            tempObj = [];
-            for indx2 = 1: 1: sizeInfo(2)
-                thisCol = [];
-                for indx1 = 1: 1: sizeInfo(1)
-                    thisObj = uminus1D(obj(indx1, indx2));
-                    thisCol = [thisCol; thisObj];
-                end
-                tempObj = [tempObj, thisCol];
-            end
-            function tempObj = uminus1D(obj)
-                if ~isempty(obj.duration)
-                    obj.duration = - obj.duration;
-                    if ~isempty(obj.scope)
-                        obj.scope = - obj.scope;
-                    end
-                    tempObj = obj;
-                    switch obj.intervalType
-                        case 'openright', tempObj.intervalType = 'openleft';
-                        case 'openleft', tempObj.intervalType = 'openright';
-                    end
-                else
-                    if ~isempty(obj.scope)
-                        tempObj = obj;
-                        tempObj.bottom = obj.top;
-                        tempObj.top = obj.bottom;
-                        tempObj.scope = - obj.scope;
-                        switch obj.intervalType
-                            case 'openright', tempObj.intervalType = 'openleft';
-                            case 'openleft', tempObj.intervalType = 'openright';
+                        if tf, obj(sz) = arange();
+                            for idx = 1: num, obj(idx) = optCell{idx}; end
+                        else, warning('Use [~, Cell] to get the output cell.');
                         end
-                    end
-                end
-            end
-        end
-
-        function obj = plus(obj1, obj2)
-            sizeInfo1 = size(obj1); sizeInfo2 = size(obj2);
-            if all(sizeInfo1 == sizeInfo2)
-                obj = [];
-                for indx2 = 1: 1: sizeInfo1(2)
-                    thisCol = [];
-                    for indx1 = 1: 1: sizeInfo1(1)
-                        thisObj = plus1DHelper(obj1(indx1, indx2), obj2(indx1, indx2));
-                        thisCol = [thisCol; thisObj];
-                    end
-                    obj = [obj, thisCol];
-                end
-            elseif numel(obj1) == 1
-                obj = obj2; for indx = 1: 1: numel(obj2), obj(indx) = plus(obj1, obj2(indx)); end
-            elseif numel(obj2) == 1
-                obj = obj1; for indx = 1: 1: numel(obj1), obj(indx) = plus(obj1(indx), obj2); end
-            else
-                error('Input size does not match.')
-            end
-            function obj = plus1DHelper(obj1, obj2)
-                numericFlag1 = isnumeric(obj1);numericFlag2 = isnumeric(obj2);
-                if ~numericFlag1 && numericFlag2, obj = plus1DHelper(obj1, arange(obj2, obj2));
-                elseif numericFlag1 && numericFlag2, sum = obj1 + obj2; obj = arange(sum, sum);
-                elseif numericFlag1 && ~numericFlag2, obj = plus1DHelper(arange(obj1,obj1),obj2);
-                else % ~numericFlag1 && ~numericFlag2 % Suppose Arange
-                    duration1 = obj1.duration; duration2 = obj1.duration;
-                    if ~isempty(duration1) && ~isempty(duration2), obj = arange(duration1+duration2);
-                    else, unit1 = obj1.unit; unit2 = obj2.unit; if ~isempty(unit1) && ~isempty(unit2), if ~strcmp(unit1,unit2), error('Unit does not match.'); end; end
-                        positiveFlag1 = obj1 == abs(obj1);
-                        positiveFlag2 = obj2 == abs(obj2);
-                        additionIntervalType = intervalTypePlus(obj1.intervalType, obj2.intervalType);
-                        if ~positiveFlag1 && positiveFlag2
-                            obj = plus(obj2, obj1);
-                        elseif ~positiveFlag1 && ~positiveFlag2
-                            obj = -plus(-obj1, -obj2);
-                        elseif positiveFlag1 && positiveFlag2
-                            obj = arange(obj1.bottom + obj2.bottom, obj1.top + obj2.top, additionIntervalType, obj1.unit);
-                        elseif positiveFlag1 && ~positiveFlag2
-                            obj = arange(obj1.bottom - obj2.bottom, obj1.top - obj2.top, additionIntervalType, obj1.unit);
-                        end
-                    end
-                end
-                function intervalType = intervalTypePlus(intervalType1, intervalType2)
-                    [leftFlag1, rightFlag1] = intervalType2flag(intervalType1);
-                    [leftFlag2, rightFlag2] = intervalType2flag(intervalType2);
-                    intervalType = flag2intervalType(flagPlus(leftFlag1, leftFlag2), flagPlus(rightFlag1, rightFlag2));
-                    function additionFlag = flagPlus(flag1, flag2)
-                        if all(strcmp({flag1, flag2}, '[')), additionFlag = '[';
-                        else, additionFlag = '('; end
-                    end
-                end
-            end
-        end
-
-        function obj = minus(obj1, obj2)
-            obj = plus(obj1, -obj2);
-        end
-
-        function tf = checkAllHasDuration(obj)
-            tf = true;
-            for indx = 1: 1: numel(obj), if isempty(obj(indx).duration), tf = false; end; end
-        end
-
-        function tf = checkAllHasScope(obj)
-            tf = true;
-            for indx = 1: 1: numel(obj), if isempty(obj(indx).scope), tf = false; end; end
-        end
-
-        function prod = times(obj1, obj2)
-            numericFlag1 = isnumeric(obj1); numericFlag2 = isnumeric(obj2);
-            if ~numericFlag1 && numericFlag2, prod = times(obj2, obj1);
-            elseif numericFlag1 && numericFlag2, prod = times(obj1, obj2);
-            elseif numericFlag1 && ~numericFlag2
-                numelInfo1 = numel(obj1); numelInfo2 = numel(obj2);
-                if numelInfo1 == numelInfo2
-                    prod = obj2;
-                    for indx = 1: 1: numelInfo1
-                        if ~isempty(prod(indx).duration), prod(indx).duration = obj1(indx) .* prod(indx).duration; prod(indx).scope = prod(indx).duration;
-                        else
-                            try 
-                                prod(indx).bottom = prod(indx).bottom .* obj1(indx);
-                                prod(indx).top = prod(indx).top .* obj1(indx);
-                                prod(indx).scope = prod(indx).scope .* obj1(indx);
-                                prod(indx).unit = [prod(indx).unit sprintf('/%d',obj1(indx))];
-                                try
-                                    if obj1(indx) < 0
-                                        switch prod(indx).intervalType
-                                            case 'openright', prod(indx).intervalType = 'openleft';
-                                            case 'openleft', prod(indx).intervalType = 'openright';
+                    else
+                        try
+                            if sz(:,end) == 2
+                                obj(sz(:,1:end-1)) = arange();
+                                for idx = 1: num/2
+                                    obj(idx).range = {in(idx), in(idx+num/2)};
+                                    if UniformFlag2
+                                        switch flag
+                                            % To be updated
+                                            case 'Unit', obj(idx).unit = UnitRectifyUtility(ITorUnit);
+                                            case 'IT', obj(idx).lb = lb; obj(idx).rb = rb;
+                                        end
+                                    elseif ~UniformFlag2
+                                        thisITorUnit = ITorUnit(idx);
+                                        [lb, rb] = IntervalTypeName2BoundaryTypes(thisITorUnit);
+                                        if isempty(lb), obj(idx).unit = UnitRectifyUtility(thisITorUnit);
+                                        else, obj(idx).lb = lb; obj(idx).rb = rb;
                                         end
                                     end
-                                catch
+                                    if (nargin == 3)
+                                        if UniformFlag3, obj(idx).unit = UnitRectifyUtility(Unit);
+                                        else, obj(idx).unit = UnitRectifyUtility(Unit(idx));
+                                        end
+                                    end
+                                    obj(idx) = obj(idx).inputRectify;
                                 end
-                            catch
-                                if isa(prod(indx).scope, 'duration'), tempObj = arange((prod(indx).scope).*obj1(indx), prod(indx).intervalType); prod(indx) = tempObj;
-                                else, try prod = prod(indx).arange2scopemat .* obj1(indx); catch; end; end
+                            else % Arange be a fix point
+                                obj(sz) = arange();
+                                for idx = 1: num
+                                    obj(idx).range = {in(idx), in(idx)};
+                                    obj(idx).lb = ClosedBoundaryType;
+                                    obj(idx).rb = ClosedBoundaryType;
+                                    if (nargin > 1), warning('Fix Point Output. Check Syntax.'); end
+                                    if (nargin == 3)
+                                        if UniformFlag3, obj(idx).unit = UnitRectifyUtility(Unit);
+                                        else, obj(idx).unit = UnitRectifyUtility(Unit(idx));
+                                        end
+                                    end
+                                    try if isnar(obj(idx)), obj(idx).nar = true; else, obj(idx).nar = false; end; catch; end
+                                end
                             end
+                        catch ME
+                            warning('Input Class not Supported.');
+                            error(ME.message);
                         end
                     end
-                elseif numelInfo1 == 1, prod = times(obj1*ones(size(obj2)),obj2);
-                else
-                    error('Not supported. Only: arange times scalar or matrix of same size.')
+                catch ME
+                    warning('Expect input [left, right], intervalType, unit.');
+                    warning(ME.message); obj.nar = true; return
                 end
-            else % ~numericFlag1 && ~numericFlag2
-                error('Not supported: arange times arange. Only: arange times scalar or matrix of same size.')
+            end
+            
+            function tf = CheckSettingsSize(in, num)
+                if numel(string(in)) == 1 && ~isa(in, 'cell'), tf = true;
+                elseif numel(in) == num, tf = false;
+                elseif isempty(in), tf = true;
+                else, error('Settings Size do not Match. Check Syntax.')
+                end
             end
         end
 
-        function prod = mtimes(obj1, obj2)
-            try
-%                 if ~isnumeric(obj1), try dr1 = obj1.ar2dr; flag = 1; catch; try dr1 = obj1.ar2mt; flag = 2; catch; end; end; else, dr1 = obj1; end
-%                 if ~isnumeric(obj2), try dr2 = obj2.ar2dr; flag = 1; catch; try dr1 = obj2.ar2mt; flag = 2; catch; end; end; else, dr2 = obj2; end 
-%                 % prod = dr1 * dr2
-                prod = mat_times(obj1, obj2);
-            catch
-                try obj1 = obj1.arange2scopemat; catch; end
-                try obj2 = obj2.arange2scopemat; catch; end
-                try prod = mat_times(obj1, obj2);
+        function val = get.type(obj)
+            switch obj.lb.li
+                case '{'
+                    switch obj.rb.ri
+                        case ')', val = 'ambiguous-open';
+                        case ']', val = 'ambiguous-closed';
+                        case '}', val = 'ambiguous';
+                    end
+                case '('
+                    switch obj.rb.ri
+                        case ')', val = 'open';
+                        case ']', val = 'openleft';
+                        case '}', val = 'open-ambiguous';
+                    end
+                case '['
+                    switch obj.rb.ri
+                        case ')', val = 'openright';
+                        case ']', val = 'closed';
+                        case '}', val = 'closed-ambiguous';
+                    end
+            end
+        end
+
+        function val = get.scope(obj)
+            if isa(obj.range, 'cell')
+                try val = obj.range{2} - obj.range{1}; 
                 catch
-                    error('Syntax Error. Expect Mat * ArangeWithDuration -> Arange; Or Mat * Arange2ScopeMat -> Mat. Match Size!')
+                    if isa(obj.range{1}, 'datetime'), val = 'NaD';
+                    else, val = NaN; end
                 end
-            end
-            function prod = mat_times(obj1, obj2)
-                sizeInfo1 = size(obj1); sizeInfo2 = size(obj2); 
-                prod = [];
-                if sizeInfo1(2) == sizeInfo2(1)
-                    for indx2 = 1: 1: sizeInfo2(2)
-                        thisCol = [];
-                        for indx1 = 1: 1: sizeInfo1(1)
-                            thisSlice1 = obj1(indx1,:); thisSlice2 = obj2(:,indx2);
-                            length1 = length(thisSlice1); length2 = length(thisSlice2); 
-                            if length1 == length2
-                                thisCell = cell(1, length1);
-                                for indx3 = 1: 1: length1
-                                    thisCell{indx3} = thisSlice1(indx3) .* thisSlice2(indx3);
-                                end
-                                thisSum = thisCell{1};
-                                for indx3 = 2: 1: length1
-                                    thisSum = thisSum + thisCell{indx3};
-                                end
-                            end
-                            thisCol = [thisCol; thisSum];
-                        end
-                        prod = [prod, thisCol];
-                    end
-                else
-                    error('Match Size!');
-                end
+            elseif isa(obj.range, 'duration') || isa(obj.range, 'timerange')
+                val = obj.range;
+            else
+                val = NaN;
             end
         end
 
+        function val = get.starts(obj)
+            if isa(obj.range, 'cell')
+                val = obj.range{1};
+            end
+        end
 
-%         function tf = min(obj1, obj2)
-%             if ~isempty(obj1.duration) && ~isempty(obj2.duration)
-%                 tf = min(obj1.duration, obj2.duration);
-%             end
-%         end
-% 
-%         function tf = max(obj1, obj2)
-%             if ~isempty(obj1.duration) && ~isempty(obj2.duration)
-%                 tf = max(obj1.duration, obj2.duration);
-%             end
-%         end
-% 
-%         function tf = mink(obj1, obj2, k)
-%             if ~isempty(obj1.duration) && ~isempty(obj2.duration)
-%                 tf = mink(obj1.duration, obj2.duration, k);
-%             end
-%         end
-    end
-
-    methods(Hidden, Static)
-        function obj = loadobj(s)
-            if ~isempty(s)
-                obj = arange();
-                obj.bottom = s.bottom;
-                obj.top = s.top;
-                obj.intervalType = s.intervalType;
-                obj.unit = s.unit;
-                obj.duration = s.duration;
-                obj.scope = s.scope;
+        function val = get.ends(obj)
+            if isa(obj.range, 'cell')
+                val = obj.range{2};
             end
         end
     end
 
-    methods(Access=public)
-        function tf = intervalLessThan(obj1, obj2)
-            if all(size(obj1) == size(obj2)), numelInfo = numel(obj1);
-                tf = false(size(obj1));
-                for indx = 1: 1: numelInfo
-                    if isempty(obj1(indx).duration) && isempty(obj2(indx).duration)
-                        if issame(obj1(indx).bottom, obj1(indx).top) && issame(obj2(indx).bottom, obj2(indx).top) && ~isempty(obj1(indx)) && ~isempty(obj2(indx)) && (strcmp(obj1(indx).unit, obj2(indx).unit) || (isempty(obj1(indx).unit) && isempty(obj2(indx).unit)))
-                            tf(indx) = (obj1(indx).bottom < obj2(indx).bottom);
-                        elseif ~isempty(obj1(indx)) && ~isempty(obj2(indx)) && (strcmp(obj1(indx).unit, obj2(indx).unit) || (isempty(obj1(indx).unit) && isempty(obj2(indx).unit)))
-                            validIntervalTypeRelationship = {'openrightopenright', 'openleftopenleft', 'openopen'};
-                            max1 = max(obj1(indx).bottom, obj1(indx).top);
-                            min2 = min(obj2(indx).bottom, obj2(indx).top);
-                            tf(indx) = ( max1 < min2 ) || ( (isequal(max1, min2)) && any(strcmp([obj1.intervalType, obj2.intervalType], validIntervalTypeRelationship)));
-                        end
-                    end
-                end
-            elseif numel(obj1) == 1
-                tf = false(size(obj2)); for indx = 1: 1: numel(obj2), tf(indx) = intervalLessThan(obj1, obj2(indx)); end
-            elseif numel(obj2) == 1
-                tf = false(size(obj1)); for indx = 1: 1: numel(obj1), tf(indx) = intervalLessThan(obj1(indx), obj2); end
+    methods % Get Properties as Cells or Arrays
+        function val = getStarts(obj)
+            num = numel(obj);
+            if num == 1, val = obj.starts;
             else
-                tf = false;
+                val = cell(size(obj));
+                for idx = 1: num
+                    val{idx} = obj(idx).starts;
+                end
+            end
+            try val = cell2mat(val); catch; end
+        end
+
+        function val = getEnds(obj)
+            num = numel(obj);
+            if num == 1, val = obj.ends;
+            else
+                val = cell(size(obj));
+                for idx = 1: num
+                    val{idx} = obj(idx).ends;
+                end
+            end
+            try val = cell2mat(val); catch; end
+        end
+
+        function val = getTypes(obj)
+            val(size(obj)) = string;
+            for idx = 1: numel(obj)
+                val(idx) = obj(idx).type;
             end
         end
 
-        function tf = intervalGreaterThan(obj1, obj2)
-            tf = intervalLessThan(obj2, obj1);
-        end
-
-        function tf = unitSame(obj1, obj2)
-            if all(size(obj1) == size(obj2)), numelInfo = numel(obj1);
-                tf = false(size(obj1));
-                for indx = 1: 1: numelInfo
-                    if isempty(obj1(indx).unit) && isempty(obj2(indx).unit)
-                        tf(indx) = true;
-                    elseif ~isempty(obj1(indx).unit) && ~isempty(obj2(indx).unit)
-                        if strcmp(obj1(indx).unit, obj2(indx).unit)
-                            tf(indx) = true;
-                        end
-                    end
-                end
-            elseif numel(obj1) == 1
-                tf = false(size(obj2)); for indx = 1: 1: numel(obj2), tf(indx) = unitSame(obj1, obj2(indx)); end
-            elseif numel(obj2) == 1
-                tf = false(size(obj1)); for indx = 1: 1: numel(obj1), tf(indx) = unitSame(obj1(indx), obj2); end
+        function val = getScopes(obj)
+            num = numel(obj);
+            if num == 1, val = obj.scope;
             else
-                tf = false;
-            end
-        end
-
-        function tf = intervalIntersects(obj1, obj2)
-            tf = ~intervalGreaterThan(obj1, obj2) & ~intervalLessThan(obj1, obj2) & unitSame(obj1, obj2);
-        end
-
-        function ints = intersect(obj1, obj2)
-            if isempty(obj1), ints = arange();
-            elseif isempty(obj2), ints = arange();
-            else
-                if ~all(all(unitSame(obj1, obj2))), error('Can not calculate intersection. Check size.');
-                else
-                    if all(size(obj1) == size(obj2)), sizeInfo = size(obj1);
-                        ints = [];
-                        for indx2 = 1: 1: sizeInfo(2)
-                            thisCol = [];
-                            for indx1 = 1: 1: sizeInfo(1)
-                                thisObj1 = obj1(indx1, indx2); thisObj2 = obj2(indx1, indx2);
-                                if intervalIntersects(thisObj1, thisObj2)
-                                    thisUnit = thisObj1.unit;
-                                    bottom1 = thisObj1.bottom; top1 = thisObj1.top; intervalType1 = thisObj1.intervalType;
-                                    bottom2 = thisObj2.bottom; top2 = thisObj2.top; intervalType2 = thisObj2.intervalType;
-                                    [leftFlag1, rightFlag1] = intervalType2flag(intervalType1);
-                                    [leftFlag2, rightFlag2] = intervalType2flag(intervalType2);
-                                    if thisObj2.ni(top1), rightFlag = rightFlag1; topNew = top1;
-                                    else, rightFlag = rightFlag2; topNew = top2; end
-                                    if thisObj2.ni(bottom1), leftFlag = leftFlag1; bottomNew = bottom1;
-                                    else, leftFlag = leftFlag2; bottomNew = bottom2; end
-                                    thisInts = arange(bottomNew, topNew, flag2intervalType(leftFlag, rightFlag), thisUnit);
-                                else
-                                    thisInts = arange();
-                                end
-                                thisCol = [thisCol; thisInts];
-                            end
-                            ints = [ints, thisCol];
-                        end
-                    elseif numel(obj1) == 1
-                        ints = []; sizeInfo = size(obj2);
-                        for indx2 = 1: 1: sizeInfo(2); thisCol = []; 
-                            for indx1 = 1: 1: sizeInfo(1); thisInts = intersect(obj1, obj2(indx1, indx2)); thisCol = [thisCol; thisInts]; end
-                            ints = [ints, thisCol];
-                        end
-                    elseif numel(obj2) == 1, ints = intersect(obj2, obj1);
-                    else
-                        ints = false;
-                    end
+                val = cell(size(obj));
+                for idx = 1: num
+                    val{idx} = obj(idx).scope;
                 end
             end
+            try val = cell2mat(val); catch; end
         end
     end
-    
+
     methods(Access=private)
         function obj = inputRectify(obj)
-            for indx = 1: 1: numel(obj)
-                % check bottom and top
-                Error1 = {'arange:ClassNotMatBottomTop', 'Classes of inputs bottom and top do not match.'};
-                if ~isempty(obj(indx).top), if ~isequal(class(obj(indx).bottom), class(obj(indx).top)), error(Error1{:}); end; end
-                % intervalType rectify
-                switch obj(indx).intervalType, case 'closedright', obj(indx).intervalType = 'openleft'; case 'closedleft', obj(indx).intervalType = 'openright'; end
-                % fix unitOfTime
-                try if any(validatestring(obj(indx).unit, {'years', 'year', 'quarters', 'quarter', 'months', 'month', 'weeks', 'week', 'days', 'day', 'hours', 'hour', 'minutes', 'minute', 'seconds', 'second'}))
-                    if ~strcmp(obj(indx).unit(end), 's'), obj(indx).unit = [char(string(obj(indx).unit)), 's']; end; end
-                catch
-                end
+            for idx = 1: 1: numel(obj)
                 % endpoints to timetype
-                topTraits = endpointTraits(obj(indx).top);
-                try if topTraits.isInvalid, obj(indx).top = obj(indx).bottom; obj(indx) = obj(indx).endpoints2Timetype(); end
-                catch, obj(indx) = obj(indx).bottomAddToTopFromUnit; end
+                topTraits = endpointTraits(obj(idx).range{2});
+                try if topTraits.isInvalid, obj(idx).range{2} = obj(idx).range{1}; obj(idx) = obj(idx).endpoints2Timetype(); end
+                catch, obj(idx) = obj(idx).bottomAddToTopFromUnit; end
                 % snap endpoints
-                if ~isempty(obj(indx).unit), try obj(indx) = obj(indx).snapEndpointsToUnitOfTime(); catch; end; end
-                % scope calculation
-                try obj(indx).scope = obj(indx).arange2duration; catch; end
-                % intervalType standardize
-                if ~isempty(obj(indx).top), if isthesame(obj(indx).top, obj(indx).bottom), obj(indx).intervalType = 'closed'; end; end
-                % if still not converted to datetime
-                if isa(obj(indx).bottom, 'char') || isa(obj(indx).bottom, 'string'), try obj = obj.value2datetime; catch; end; end
-            end
-        end
-
-        function [obj, optionalCell] = inputConvert(obj, input, newIntervalType)
-            optionalCell = {};
-            try if isa(input, 'numeric')
-                    if size(input, 2) == 1, error('Not Covertable to arange');
-                    else, obj = []; for indx = 1: 1: size(input, 1), obj = [obj; arange(input(indx, 1), input(indx, end))]; end; end
-                elseif isa(input, 'duration'), if numel(input) == 1, obj.duration = input; else, obj = duration2arange(input); end
-                elseif isa(input, 'timerange'), obj = timerange2arange(input);
-                elseif isa(input, 'datetime'), obj = datetime2arange(input);
-                elseif isa(input, 'cell')
-                    sizeInfo = size(input);
-                    obj = {};
-                    tf = true;
-                    for indx2 = 1: 1: sizeInfo(2)
-                        thisCol = {};
-                        for indx1 = 1: 1: sizeInfo(1)
-                            thisObj = arange(input{indx1, indx2});
-                            tf = tf && isarange(thisObj);
-                            if isa(thisObj, 'cell')
-                                thisCol = [thisCol; thisObj];
-                            else
-                                thisCol = [thisCol; {thisObj}];
-                            end
+                if ~isempty(obj(idx).unit), try obj(idx) = obj(idx).snapEndpointsToUnitOfTime(); catch; end; end
+                % if still not converted to datetime / duration
+                if isa(obj(idx).range{1}, 'char') || isa(obj(idx).range{1}, 'string'), try obj(idx) = obj(idx).valuefunc(@datetime); catch; end; end
+                if isa(obj(idx).range{1}, 'numeric') || isa(obj(idx).range{2}, 'numeric'), try obj(idx) = obj(idx).valuefunc(DurationFormat2FuncUtility(obj(idx).unit)); catch; end; end
+                % Unit rectify
+                if isa(obj(idx).range{1}, 'duration') && isa(obj(idx).range{2}, 'duration')
+                    format1 = obj(idx).range{1}.Format; format2 = obj(idx).range{2}.Format;
+                    if isequal(format1, format2)
+                        switch format1
+                            case {'s', 'd'}, obj(idx).unit = symunit(format1);
+                            case 'm', obj(idx).unit = symunit('minute');
+                            case 'y', obj(id).unit = symunit('year');
                         end
-                        obj = [obj, thisCol];
-                    end
-                elseif isa(input, 'arange'), obj = input;
-                end
-                if (nargin == 3) && ~isa(obj, 'cell'), obj = obj.intervalTypeUpdate(newIntervalType); end
-                if ~isa(obj, 'cell'), obj = obj.inputRectify; end
-                if isa(obj, 'cell'), optionalCell = obj; obj = arange.empty; 
-                    if tf
-                        obj = [];
-                        sizeInfo = size(optionalCell);
-                        for indx2 = 1: 1: sizeInfo(2)
-                            thisCol = [];
-                            for indx1 = 1: 1: sizeInfo(1)
-                                thisCol = [thisCol; optionalCell{indx1, indx2}];
-                            end
-                            obj = [obj, thisCol];
-                        end
-                    else
-                        warning('Use [~, Cell] to get the output cell.'); 
                     end
                 end
-            catch
-                obj = arange.empty;
-                warning('Output empty arange. Check inputs.')
+                % check is nar
+                try if isnar(obj), obj.nar = true; else, obj.nar = false; end; catch; end
             end
         end
 
         function obj = endpoints2Timetype(obj)
-            bottomTraits = endpointTraits(obj.bottom);
-            topTraits  = endpointTraits(obj.top);
+            bottomTraits = endpointTraits(obj.range{1});
+            topTraits  = endpointTraits(obj.range{2});
             if bottomTraits.isText
-                obj.bottom = text2Timetype_helper(obj.bottom, obj.top, obj.unit);
-                obj.bottom = handleTimeZone(obj.bottom, obj.top, topTraits);
+                obj.range{1} = text2Timetype_helper(obj.range{1}, obj.range{2}, obj.unit);
+                obj.range{1} = handleTimeZone(obj.range{1}, obj.range{2}, topTraits);
             end
             if topTraits.isText
-                obj.top = text2Timetype_helper(obj.top, obj.bottom, obj.unit);
-                obj.top = handleTimeZone(obj.top, obj.bottom, bottomTraits);
+                obj.range{2} = text2Timetype_helper(obj.range{2}, obj.range{1}, obj.unit);
+                obj.range{2} = handleTimeZone(obj.range{2}, obj.range{1}, bottomTraits);
             end
         end
 
         function obj = snapEndpointsToUnitOfTime(obj)
             try % DATESHIFT only works if both FIRST and LAST are datetime.
-                obj.bottom = dateshift(obj.bottom, 'start', obj.unit);
-                if obj.top ~= dateshift(obj.top, 'end', obj.unit, 'previous') || obj.top == obj.bottom
-                    obj.top  = dateshift(obj.top, 'start', obj.unit, 'next');
+                obj.range{1} = dateshift(obj.range{1}, 'start', UnitConvertUtility(obj.unit));
+                if obj.range{2} ~= dateshift(obj.range{2}, 'end', UnitConvertUtility(obj.unit), 'previous') || obj.range{2} == obj.range{1}
+                    obj.range{2}  = dateshift(obj.range{2}, 'start', UnitConvertUtility(obj.unit), 'next');
                 end
             catch ME
-                if isa(obj.top,'duration') || isa(obj.bottom,'duration') % Duration endpoint(s) not compatible with UNITOFTIME semantics
+                if isa(obj.range{2},'duration') || isa(obj.range{1},'duration') % Duration endpoint(s) not compatible with UNITOFTIME semantics
                     error(message('MATLAB:timerange:UnitOfTimeTypesMismatch'));
                 else
                     rethrow(ME)
@@ -787,10 +334,10 @@ classdef arange
                 
         function obj = snapTopBackToUnitOfTime(obj)
             try % DATESHIFT only works if both FIRST and LAST are datetime.
-                obj.bottom = dateshift(obj.bottom, 'start', obj.unit);
-                obj.top  = dateshift(obj.top,  'start', obj.unit, 'previous');
+                obj.range{1} = dateshift(obj.range{1}, 'start', UnitConvertUtility(obj.unit));
+                obj.range{2}  = dateshift(obj.range{2},  'start', UnitConvertUtility(obj.unit), 'previous');
             catch ME
-                if isa(obj.top,'duration') || isa(obj.bottom,'duration') % Duration endpoint(s) not compatible with UNITOFTIME semantics
+                if isa(obj.range{2},'duration') || isa(obj.range{1},'duration') % Duration endpoint(s) not compatible with UNITOFTIME semantics
                     error(message('MATLAB:timerange:UnitOfTimeTypesMismatch'));
                 else
                     rethrow(ME)
@@ -800,169 +347,351 @@ classdef arange
 
         function obj = bottomAddToTopFromUnit(obj, addNum)
             if nargin == 1, addNum = 1; end
-            bottomTraits = endpointTraits(obj.bottom);
-            topTraits = endpointTraits(obj.top);
-            if topTraits.isInvalid, try if ~bottomTraits.isDatetime || ~bottomTraits.isDuration, obj.top = obj.bottom + addNum; end; catch; end; end
+            bottomTraits = endpointTraits(obj.range{1});
+            topTraits = endpointTraits(obj.range{2});
+            if topTraits.isInvalid, try if ~bottomTraits.isDatetime || ~bottomTraits.isDuration, obj.range{2} = obj.range{1} + addNum; end; catch; end; end
         end
     end
-    
 
-    methods(Access=public)
-        function obj = intervalTypeUpdate(obj, newIntervalType)
-            numelInfo = numel(obj);
-            if numelInfo > 1, for indx = 1: 1: numelInfo, obj(indx) = intervalTypeUpdate(obj(indx), newIntervalType); end
-            else, obj.intervalType = newIntervalType; end
+    methods(Hidden)
+        %% display
+        function disp(obj)
+            import matlab.internal.display.lineSpacingCharacter
+            tab = sprintf('  ');
+            sz = size(obj); tp = strcat(strrep(string(int2str(sz'))," ",""),[arrayfun(@(x)"x",1:length(sz)-1)';""]); sz2cr = strcat(tp{:}); sizeChar = [sz2cr ' <a href = "matlab:help arange">arange</a> array'];
+            switch numel(obj)
+                case 1
+                    strLeft = obj.lb.li; strRight = obj.rb.ri;
+                    datetimeformat = settings().matlab.datetime.DefaultFormat.ActiveValue;
+                    if ~isempty(obj.range{1})
+                        if isa(obj.range{1},'datetime'), dispMsg = [strLeft ' ' dt2charHelper(obj.range{1}, datetimeformat) ', ' dt2charHelper(obj.range{2}, datetimeformat) strRight];
+                        else, dispMsg = [strLeft dt2charHelper(obj.range{1}) ', ' dt2charHelper(obj.range{2}) strRight]; end
+                    else, dispMsg = [obj.type ' intervalType']; 
+                    end
+                    dispMsg = ['(' dt2charHelper(obj.scope) ')-scope ' dispMsg];
+                    if ~isequal(obj.unit, sym('1')), dispMsg = [dispMsg ' ( unit ' char(obj.unit) ' )']; end
+                    % display
+                    if ~isempty(obj)
+                        if obj.nar, disp([tab tab '<a href = "matlab:help arange/arange">arange</a> NaR']);
+                        else, disp([tab tab 'range of ' dispMsg]); 
+                        end
+                    else, disp([tab tab 'an <a href = "matlab:help arange/isempty">empty</a> range ' dispMsg]); 
+                    end
+                case 0, disp([tab sizeChar lineSpacingCharacter]);
+                otherwise, disp([tab sizeChar lineSpacingCharacter]);
+                    if length(sz) <= 2 && numel(obj), for indx2 = 1: sz(2), disp([tab 'column' int2str(indx2)]); for indx1 = 1: sz(1), disp(obj(indx1, indx2)); end; end; end
+            end
+            function output = dt2charHelper(input, datetimeformat)
+                output = [];
+                try if isempty(input), output = ''; end; catch; end
+                try if isnan(input), output = 'NaN'; end; catch; end
+                if isempty(output), try if isnat(input), output = 'NaT'; end; catch; end; end
+                if nargin == 2, if isempty(output), try output = [char(input, datetimeformat) ' ' input.TimeZone]; catch, output = char(input, datetimeformat); end; end; end
+                if isempty(output), try output = char(string(input)); catch; end; end
+                if isempty(output), output = ''; end
+            end
         end
 
+        %% operation
+        function tf = isnar(obj)
+            tf = false(size(obj)); for idx = 1: numel(obj), tf(idx) = isnar1D(obj(idx)); end
+            function tf = isnar1D(obj)
+                tf = any(emptyNaRArangeList == obj); if tf, return; end
+                if ~tf, try if isequal(obj.range{1}, obj.range{2}) && ~any(strcmp(strcat(obj.lb.li,obj.rb.ri), {'[]','{}'})), tf = true; end; catch; end; end
+                if ~tf, try if isnan(obj.range{1}) || isnan(obj.range{2}), tf = true; end; catch; end; end
+                if ~tf, try if isnat(obj.range{1}) || isnat(obj.range{2}), tf = true; end; catch; end; end
+            end
+        end
+
+        function pd = abs(obj)
+            sz = size(obj); sz = arrayfun(@(x){sz(x)}, 1:length(sz));
+            pd(sz{:}) = arange(); for idx = 1: numel(obj), pd(idx) = abs1D(obj(idx)); end
+            function pd = abs1D(obj)
+                pd = obj;
+                if pd.scope < 0
+                    pd.range{1} = obj.range{2};
+                    pd.range{2} = obj.range{1};
+                    pd.lb = obj.rb;
+                    pd.rb = obj.lb;
+                end
+            end
+        end
+
+        function pd = uminus(obj)
+            sz = size(obj); sz = arrayfun(@(x){sz(x)}, 1:length(sz));
+            pd(sz{:}) = arange(); for idx = 1: numel(obj), pd(idx) = uminus1D(obj(idx)); end
+            function pd = uminus1D(obj)
+                pd = obj;
+                pd.range{1} = obj.range{2};
+                pd.range{2} = obj.range{1};
+                pd.lb = obj.rb;
+                pd.rb = obj.lb;
+            end
+        end
+
+        function obj = plus(obj1, obj2)
+            obj = operateSizeHelper(obj1, obj2, @plus1D, @sz2ar);
+            function obj = plus1D(obj1, obj2)
+                numericFlag1 = isnumeric(obj1); numericFlag2 = isnumeric(obj2);
+                if ~numericFlag1 && numericFlag2, obj = plus1D(obj1, arange(obj2));
+                elseif numericFlag1 && numericFlag2, sum = obj1 + obj2; obj = arange(sum);
+                elseif numericFlag1 && ~numericFlag2, obj = plus1D(arange(obj1),obj2);
+                else % ~numericFlag1 && ~numericFlag2
+                    if ~isa(obj1, 'arange') || ~isa(obj2, 'arange')
+                        try obj = plus(arange(obj1), arange(obj2)); catch; end
+                    else
+                        if obj1.nar || obj2.nar, obj = arange(); return; end
+                        % To be updated
+                        unit1 = obj1.unit; unit2 = obj2.unit; if ~isempty(unit1) && ~isempty(unit2), if ~isequal(unit1,unit2), error('Unit does not match.'); end; end
+                        abs1 = abs(obj1); abs2 = abs(obj2);
+                        obj = obj1; 
+                        obj.lb = abs1.lb + abs2.lb; 
+                        obj.rb = abs1.rb + abs2.rb;
+                        obj.range{1} = abs1.range{1} + abs2.range{1};
+                        obj.range{2} = abs1.range{2} + abs2.range{2};
+                    end
+                end
+            end
+        end
+
+        function obj = minus(obj1, obj2)
+            obj = operateSizeHelper(obj1, obj2, @minus1D, @sz2ar);
+            function obj = minus1D(obj1, obj2)
+                numericFlag1 = isnumeric(obj1); numericFlag2 = isnumeric(obj2);
+                if ~numericFlag1 && numericFlag2, obj = plus1D(obj1, arange(obj2));
+                elseif numericFlag1 && numericFlag2, sum = obj1 + obj2; obj = arange(sum);
+                elseif numericFlag1 && ~numericFlag2, obj = plus1D(arange(obj1),obj2);
+                else % ~numericFlag1 && ~numericFlag2
+                    if ~isa(obj1, 'arange') || ~isa(obj2, 'arange')
+                        try obj = plus(arange(obj1), arange(obj2)); catch; end
+                    else
+                        if obj1.nar || obj2.nar, obj = arange(); return; end
+                        % To be updated
+                        unit1 = obj1.unit; unit2 = obj2.unit; if ~isempty(unit1) && ~isempty(unit2), if ~isequal(unit1,unit2), error('Unit does not match.'); end; end
+                        abs1 = abs(obj1); abs2 = abs(obj2);
+                        obj = obj1; 
+                        obj.lb = abs1.lb + abs2.rb; 
+                        obj.rb = abs1.rb + abs2.lb;
+                        obj.range{1} = abs1.range{1} - abs2.range{2};
+                        obj.range{2} = abs1.range{2} - abs2.range{1};
+                    end
+                end
+            end
+        end
+    end
+
+    methods(Access=public)
+        %% Intersection
+        function tf = intervalLessThan(obj1, obj2)
+            tf = operateSizeHelper(obj1, obj2, @intervalLessThan1D, @false);
+        end
+
+        function tf = intervalLessThan1D(obj1, obj2)
+            if obj1.nar || obj2.nar, tf = false;
+            elseif ~unitSame(obj1,obj2), tf = false;
+            else
+                if isequal(obj1.range{1}, obj1.range{2}) && isequal(obj2.range{1}, obj2.range{2}), tf = (obj1.range{1} < obj2.range{1});
+                elseif ~isempty(obj1) && ~isempty(obj2)
+                    validList = {')[', ')(', ']('}; % max1 == max
+                    max1 = max(obj1.range{1}, obj1.range{2});
+                    min2 = min(obj2.range{1}, obj2.range{2});
+                    tf = ( max1 < min2 ) || ( (isequal(max1, min2)) && any(strcmp([obj1.rbt.ri, obj2.lb.li], validList)));
+                end
+            end
+        end
+
+        function tf = intervalGreaterThan(obj1, obj2)
+            tf = intervalLessThan(obj2, obj1);
+        end
+
+        function tf = unitSame(obj1, obj2)
+            tf = operateSizeHelper(obj1, obj2, @(x,y)(isempty(x.unit)&&isempty(y.unit))||isequal(x.unit,y.unit), @false);
+        end
+
+        function tf = intervalMayIntersect(obj1, obj2)
+            tf = ~intervalGreaterThan(obj1, obj2) & ~intervalLessThan(obj1, obj2) & ~(obj1.nar | obj2.nar);
+        end
+
+        function pd = intersect(obj1, obj2)
+            pd = operateSizeHelper(obj1, obj2, @intersect1D, @sz2ar);
+        end
+
+        function pd = times(obj1, obj2)
+            pd = operateSizeHelper(obj1, obj2, @times1D, @sz2ar);
+            function pd = times1D(obj1, obj2)
+                if isnumeric(obj1)
+                    if obj1 > 0
+                        pd = obj2;
+                            pd.range{1} = obj1 .* obj2.range{1};
+                            pd.range{2} = obj1 .* obj2.range{2};
+                    elseif obj1 < 0
+                        pd = obj2;
+                            pd.range{1} = obj1 .* obj2.range{2};
+                            pd.range{2} = obj1 .* obj2.range{1};
+                            pd.lb = obj.rb; pd.rb = obj.lb;
+                    else
+                        pd = arange();
+                    end
+                    elseif isnumeric(obj2), pd = times1D(obj2, obj1);
+                else, error('Not supported inputs. Expect numeric and arange.')
+                end
+            end
+        end
+
+        function pd = mtimes(obj1, obj2) % stack in a new dimension / one-dimensionalize
+            if ~isa(obj1, 'arange'), obj1 = arange(obj1); end
+            if ~isa(obj2, 'arange'), obj2 = arange(obj2); end
+            sz1 = size(obj1); sz2 = size(obj2);
+            if all(sz1 == sz2)
+                if sz1(:,end) == 1, EndPoint = length(sz1) - 1;
+                else, EndPoint = length(sz1);
+                end
+                sz = [arrayfun(@(x){sz1(x)},1:EndPoint),{2}];
+                pd(sz{:}) = arange();
+                correctPartStem = arrayfun(@(x){1:sz1(x)},1:EndPoint);
+                correctPart1 = [correctPartStem, {1}];
+                pd(correctPart1{:}) = obj1;
+                correctPart2 = [correctPartStem, {2}];
+                pd(correctPart2{:}) = obj2;
+            else
+                error('Size not match. Expect same size.')
+            end
+        end
+
+        function pd = mpower(obj, int)% stack in a new dimension
+            try
+                int = double(int64(int));
+            catch
+                error('Syntax Error. Expect power of integral.');
+            end
+            sz = size(obj);
+            if sz(:,end) == 1, EndPoint = length(sz) - 1;
+            else, EndPoint = length(sz);
+            end
+            newSZ = [arrayfun(@(x){sz(x)},1:EndPoint),int];
+            pd(newSZ{:}) = arange();
+            correctPartStem = arrayfun(@(x){1:sz(x)},1:EndPoint);
+            for idx = 1: int
+                correctPart = [correctPartStem,{idx}];
+                pd(correctPart{:}) = obj;
+            end
+        end
+
+        function tf = eq(obj1, obj2, intersectFlag) % Whether May Intersect
+            if nargin == 2, intersectFlag = true; end
+            tf = operateSizeHelper(obj1, obj2, @(x,y)eq1D(x,y,intersectFlag), @false);
+            function tf = eq1D(obj1, obj2, intersectFlag), if ~intersectFlag, tf = isequal(obj1, obj2); else, tf = intervalMayIntersect(obj1, obj2); end; end
+        end
+
+        function tf = ne(obj1, obj2, intersectFlag)
+            if nargin == 2, intersectFlag = true; end
+            tf = ~eq(obj1, obj2, intersectFlag);
+        end
+    end
+
+    methods(Access=public)
         function tf = isarange(obj)
             tf = isa(obj, 'arange');
         end
 
-        function tf = issame(obj1, obj2)
-            tf = isequal(obj1, obj2);
-            if ~tf, try if isempty(obj1) && isempty(obj2), tf = true; end; catch; end; end
-            % if ~tf, try tf = isthesame(obj1, obj2, true); catch; end; end % array-like -> 1x1 struct -> NaN ignored
+        function flag = issame(obj1, obj2)
+            if obj1.nar || obj2.nar, flag = 0;
+            else
+                if isequal(obj1, obj2), flag = 1;
+                elseif eq(obj1, obj2), flag = 2;
+                else, flag = 0;
+                end
+            end
         end
 
-        function tf = ni(obj, themat)
-            numelInfo1 = numel(obj);
-            numelInfo2 = numel(themat);
-            if numelInfo1 > 1 && numelInfo2 == 1
-                tf = false(size(obj));
-                for indx = 1: 1: numelInfo1
-                    tf(indx) = ni(obj(indx), themat);
-                end
-            elseif numelInfo1 > 1 && numelInfo2 == numelInfo1
-                tf = false(size(themat));
-                for indx = 1: 1: numelInfo1
-                    tf(indx) = ni(obj(indx), themat(indx));
-                end
-            elseif numelInfo1 == 1 && numelInfo2 > 1
-                tf = false(size(themat));
-                for indx = 1: 1: numelInfo2
-                    tf(indx) = ni(obj, themat(indx));
-                end
-            elseif numelInfo1 == 1 && numelInfo2 == 1
-                if obj.bottom <= obj.top
-                    switch obj.intervalType
-                        case 'openright', tf = obj.bottom <= themat & themat < obj.top;
-                        case 'open', tf = obj.bottom < themat & themat < obj.top;
-                        case 'closed', tf = obj.bottom <= themat & themat <= obj.top;
-                        case 'openleft', tf = obj.bottom_limit < themat & themat <= obj.top_limit;
+        %% is in arange / is not in arange / is ambiguously in arange
+        function tf = ni(obj, mat)
+            tf = operateSizeHelper(obj, mat, @ni1D, @false);
+            function tf = ni1D(obj, mat)
+                if obj.nar, tf = false;
+                elseif obj.range{1} <= obj.range{2}
+                    switch strcat(obj.lb.li, obj.rb.ri)
+                        case {'[)', '[}'}, tf = obj.range{1} <= mat && mat < obj.range{2};
+                        case {'()', '{)', '(}', '{}'}, tf = obj.range{1} < mat && mat < obj.range{2};
+                        case '[]', tf = obj.range{1} <= mat && mat <= obj.range{2};
+                        case {'(]', '{]'}, tf = obj.range{1} < mat && mat <= obj.range{2};
                     end
                 else
-                    tempObj = abs(obj);
-                    tf = ni(tempObj, themat);
+                    tp = abs(obj);
+                    tf = ni1D(tp, mat);
                 end
-            else
-                error('Input size does not match.')
             end
         end
 
-        function tf = isinarange(obj, themat)
+        function tf = isinarange(obj, mat)
             % the same as the method ni
-            tf = obj.ni(themat);
+            tf = obj.ni(mat);
+        end
+
+        function tf = notni(obj, mat)
+            tf = operateSizeHelper(obj, mat, @notni1D, @false);
+            function tf = notni1D(obj, mat)
+                if obj.nar, tf = false;
+                elseif obj.range{1} <= obj.range{2}
+                    switch strcat(obj.lb.li, obj.rb.ri)
+                        case {'[)', '{)'}, tf = mat < obj.range{2} || obj.range{1} <= mat;
+                        case '()', tf = mat <= obj.range{1} || obj.range{2} <= mat;
+                        case {'[]', '{]', '[}', '{}'}, tf = mat < obj.range{1} || obj.range{2} < mat;
+                        case {'(]', '(}'}, tf = mat <= obj.range{1} || obj.range{2} < mat;
+                    end
+                else
+                    tp = abs(obj);
+                    tf = notni1D(tp, mat);
+                end
+            end
+        end
+
+        function tf = isnotinarange(obj, mat)
+            % the same as the method ni
+            tf = obj.notni(mat);
         end
         
-        function obj = value2datetime(obj, varargin)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    obj.bottom = datetime(obj.bottom, varargin{:});
-                    if ~isempty(obj.top)
-                        obj.top = datetime(obj.top, varargin{:});
-                    end
-                    obj = obj.inputRectify;
-                catch
-                    error('Value convert to datetime failed.')
+        function tf = isambiguousinarange(obj, mat)
+            tf = operateSizeHelper(obj, mat, @isambiguousinarange1D, @false);
+            function tf = isambiguousinarange1D(obj, mat)
+                if obj.nar, tf = false;
+                elseif obj.range{1} <= obj.range{2}
+                    tf = false; if any(strcmp({obj.lb.li, obj.rb.li}, '{')) && (mat == obj.range{1} || mat == obj.range{2}), tf = true; end
+                else
+                    tp = abs(obj);
+                    tf = isambiguousinarange1D(tp, mat);
                 end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
             end
         end
-
-        function obj = value4datestr(obj, varargin)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    obj.bottom = datestr(obj.bottom, varargin{:});
-                    if ~isempty(obj.top)
-                        obj.top = datestr(obj.top, varargin{:});
-                    end
-                catch
-                    error('Value convert to string failed.')
-                end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
+        
+        %% Conversion to other classes
+        function obj = valuefunc(obj, func, varargin)
+            for idx = 1: numel(obj)
+                obj(idx).range{1} = func(obj(idx).range{1}, varargin{:});
+                obj(idx).range{2} = func(obj(idx).range{2}, varargin{:});
             end
         end
-
-        function obj = value2str(obj, varargin)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    switch class(obj.bottom)
-                        case 'datetime'
-                            obj = obj.value4datestr(varargin{:});
-                        otherwise
-                            obj.bottom = string(obj.bottom, varargin{:});
-                            if ~isempty(obj.top)
-                                obj.top = string(obj.top, varargin{:});
-                            end
-                    end
-                catch
-                    error('Value convert to string failed.')
-                end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
-            end
-        end
-
-        function obj = value2duration(obj)
-            numelInfo = numel(obj);
-            if numelInfo == 1
-                try
-                    if ~isempty(obj.bottom) && ~isempty(obj.top)
-                        switch obj.unit
-                            case {'seconds', 'second'}, obj.bottom = seconds(obj.bottom); obj.top = seconds(obj.top);
-                            case {'minutes', 'minute'}, obj.bottom = minutes(obj.bottom); obj.top = minutes(obj.top);
-                            case {'hours', 'hour'}, obj.bottom = hours(obj.bottom); obj.top = hours(obj.top);
-                            case {'days', 'day'}, obj.bottom = days(obj.bottom); obj.top = days(obj.top);
-                        end
-                    end
-                catch
-                    error('Value convert to duration failed.')
-                end
-            elseif numelInfo > 1
-                for indx = 1: 1: numelInfo, obj(indx) = value2dtatime(obj(indx)); end
-            end
-        end
-
         function tr = arange2timerange(obj)
-            if numel(obj) == 1, tr = [];
-                try
-                    if isempty(obj.unit)
-                        tr = timerange(obj.bottom, obj.top, obj.intervalType);
-                    elseif ~isempty(obj.bottom) && ~isempty(obj.top) && any(validatestring(obj.unit, {'years', 'year', 'quarters', 'quarter', 'months', 'month', 'weeks', 'week', 'days', 'day', 'hours', 'hour', 'minutes', 'minute', 'seconds', 'second'}))
-                            if isa(obj.bottom, 'datetime')
-                                tempObj = obj.snapTopBackToUnitOfTime(); 
-                                tr = timerange(tempObj.bottom, tempObj.top, tempObj.unit); 
-                                if any(strcmp(tempObj.intervalType,{'closed','open','openleft'})), warning('IntervalType change to openright.'); end
+            if numel(obj) == 1
+                if isequal(obj.unit, sym('1')), try tr = timerange(obj.range{1}, obj.range{2}, obj.type); catch, error('Ambiguous interval type.'); end
+                elseif ~isempty(obj.range{1}) && ~isempty(obj.range{2}) && any(validatestring(UnitConvertUtility(obj.unit), {'years', 'quarters', 'months', 'weeks', 'days', 'hours', 'minutes', 'seconds'}))
+                        if isa(obj.range{1}, 'datetime')
+                            tp = obj.snapTopBackToUnitOfTime(); 
+                            tr = timerange(tp.range{1}, tp.range{2}, UnitConvertUtility(tp.unit)); 
+                            if any(strcmp(strcat(obj.lb.li, obj.rb.ri),{'[]','()','(]'})), warning('IntervalType change to openright.'); end
+                        end
+                        if isempty(tr)
+                            try
+                                tp = obj.valuefunc(DurationFormat2FuncUtility(obj.unit));
+                                if ~isa(tp.range{1}, 'duration'), error('Try value converting to duration failed.');
+                                else, try tr = timerange(tp.range{1}, tp.range{2}, tp.type); catch, error('Ambiguous interval type.'); end; end
+                            catch ME, error(ME.message);
                             end
-                            if isempty(tr)
-                                try
-                                    tempObj = obj.value2duration;
-                                    if ~isa(tempObj.bottom, 'duration'), error('Try value converting to duration failed.');
-                                    else, tr = timerange(tempObj.bottom, tempObj.top, tempObj.intervalType); end
-                                catch ME
-                                    error(ME.message);
-                                end
-                            end
-                    elseif ~isempty(obj.bottom) && ~isempty(obj.top) && isa(obj.bottom, 'duation')
-                        tr = timerange(obj.bottom, obj.top, obj.intervalType);
-                    end
-                catch
-                    if isempty(tr), error('Convert to timerange failed.'); end
+                        end
+                elseif ~isempty(obj.range{1}) && ~isempty(obj.range{2}) && isa(obj.range{1}, 'duation')
+                    try tr = timerange(obj.range{1}, obj.range{2}, obj.type); catch, error('Ambiguous interval type.'); end
+                else
+                    error('Convert to timerange failed.');
                 end
             else
                 tr = cell(size(obj));
@@ -974,105 +703,6 @@ classdef arange
 
         function tr = ar2tr(obj)
             tr = arange2timerange(obj);
-        end
-
-        function mt = arange2scopemat(obj)
-            mt = zeros(size(obj));
-            for indx = 1: 1: numel(obj)
-                thisScope = obj(indx).scope;
-                if ~isempty(thisScope) && ~isa(thisScope,'duration'), mt(indx) = obj(indx).scope;
-                else, mt(indx) = NaN; end
-            end
-        end
-
-%         function mt = ar2mt(obj)
-%             mt = arange2scopemat(obj);
-%         end
-        
-        function dt = arange2datetime(obj, varargin)
-            if numel(obj) == 1
-                try
-                    switch class(obj.bottom)
-                        case 'datetime'
-                            if ~isempty(obj.top)
-                                dt = [obj.bottom; obj.top];
-                            else
-                                dt = obj.bottm;
-                            end
-                        case {'string', 'char'}
-                            obj = obj.value2datetime(varargin{:});
-                            dt = obj.arange2datetime;
-                        otherwise
-                            error('Convert to datetime stopped. arange/arange2datetime/switch_class(obj.bottom) Calls.');
-                    end
-                catch
-                    error('Convert to datetime failed. arange/arange2datetime Calls.');
-                end
-            else
-                dt = [];
-                for indx2 = 1: 1: size(obj, 2)
-                    thisCol = [];
-                    for indx1 = 1: 1: size(obj, 1)
-                        thisDt = arange2datetime(obj(indx1, indx2), varargin{:});
-                        thisCol = [thisCol; thisDt];
-                    end
-                    dt = [dt, thisCol];
-                end
-            end
-        end
-        
-        function dt = ar2dt(obj, varargin)
-            dt = arange2datetime(obj, varargin{:});
-        end
-
-        function dr = arange2duration(obj)
-            if numel(obj) == 1
-                if ~isempty(obj.duration)
-                    dr = obj.duration;
-                else
-                    try
-                        dr = obj.top - obj.bottom;
-                        if ~isduration(dr) && any(strcmp(obj.unit,{'seconds','second','minute','minutes','hours','hour','days','day','weeks','week','years','year'}))
-                            switch obj.unit
-                                case {'seconds', 'second'}, dr = seconds(dr);
-                                case {'minutes', 'minute'}, dr = minutes(dr);
-                                case {'hours', 'hour'}, dr = hours(dr);
-                                case {'days', 'day'}, dr = days(dr);
-                                case {'weeks', 'week'}, dr = days(7*dr);
-                                case {'years', 'year'}, dr = days(dr);
-                            end
-                        end
-                    catch
-                        error('Convert to duration failed. Check units in seconds/minutes/hours/days.')
-                    end
-                end
-            else
-                dr = [];
-                for indx2 = 1: 1: size(obj, 2)
-                    thisCol = [];
-                    for indx1 = 1: 1: size(obj, 1)
-                        thisDr = arange2duration(obj(indx1, indx2));
-                        thisCol = [thisCol; thisDr];
-                    end
-                    dr = [dr, thisCol];
-                end
-            end
-        end
-
-        function dr = ar2dr(obj)
-            dr = arange2duration(obj);
-        end
-
-        function cl = arange2cell(obj)
-            sizeInfo = size(obj);
-            cl = {};
-            for indx2 = 1: 1: sizeInfo(2)
-                columncl = {};
-                for indx1 = 1: 1: sizeInfo(1)
-                    columncl = [columncl, {obj(indx1, indx2)}];
-                end
-                cl = [cl; columncl];
-            end
         end
 
         % function
@@ -1169,67 +799,52 @@ function traits = endpointTraits(in)
     traits.isInvalid = isempty(in);
 end
 
-function [value, intervalType, flag] = compareRectify(obj)
-    if isnumeric(obj), value = obj; intervalType = 'openright'; flag = {'duration', 'scope'};
-    else
+function chr = UnitConvertUtility(sym)
+    chr = char(sym);
+    chr = strrep(chr, 'symunit(''year_Julian'')', 'years');
+    chr = strrep(chr, 'symunit(''month_30'')', 'months');
+    chr = strrep(chr, 'symunit(''week'')', 'weeks');
+    chr = strrep(chr, 'symunit(''d'')', 'days');
+    chr = strrep(chr, 'symunit(''min'')', 'minutes');
+    chr = strrep(chr, 'symunit(''s'')', 'seconds');
+end
+
+function NewUnit = UnitRectifyUtility(Unit)
+    if isa(Unit, 'sym'), NewUnit = Unit; return; end
+    if isa(Unit, 'string'), Unit = char(Unit); end
+    try 
+        if any(validatestring(Unit, {'years', 'year', 'quarters', 'quarter', 'months', 'month', 'weeks', 'week', 'days', 'day', 'hours', 'hour', 'minutes', 'minute', 'seconds', 'second'}))
+            if strcmp(Unit(end), 's'), Unit = Unit(1:end-1); end
+            NewUnit = str2symunit(Unit);
+        end
+    catch
         try
-            if ~isempty(obj.duration)
-                value = obj.duration; intervalType = obj.intervalType; flag = 'duration';
-            elseif ~isempty(obj.scope)
-                value = obj.scope; intervalType = obj.intervalType; flag = 'scope';
-            end
-            if value < 0
-                value = - value;
-                switch intervalType
-                    case 'openright', intervalType = 'openleft';
-                    case 'openleft', intervalType = 'openright';
-                end
-            end
+        NewUnit = str2symunit(Unit);
         catch
-            error('Compare Rectify Error. Input class may be wrong. May lack of scope or duration.')
+            try NewUnit = str2sym(Unit); catch; end
         end
     end
 end
 
-function tf = compareLength1DLessThan(obj1, obj2, validIntervalTypeRelationship)
-    [value1, intervalType1, flag1] = compareRectify(obj1);
-    [value2, intervalType2, flag2] = compareRectify(obj2);
-    if any(strcmp(flag1, flag2))
-        try tf = (value1 < value2) || ((value1 == value2) && validIntervalTypeRelationshipCheck(intervalType1,intervalType2,validIntervalTypeRelationship));
-        catch; end
-    else, error('Compare Length Error.')
+function func = DurationFormat2FuncUtility(in)
+    switch UnitConvertUtility(in)
+        case 'seconds', func = @seconds;
+        case 'minutes', func = @minutes;
+        case 'hours', func = @hours;
+        case 'days', func = @days;
     end
 end
 
-function tf = compareLength1DLessEqual(obj1, obj2, validIntervalTypeRelationship)
-    [value1, intervalType1, flag1] = compareRectify(obj1);
-    [value2, intervalType2, flag2] = compareRectify(obj2);
-    if any(strcmp(flag1, flag2))
-        try tf = (value1 <= value2) || ((value1 == value2) && validIntervalTypeRelationshipCheck(intervalType1,intervalType2,validIntervalTypeRelationship));
-        catch; end
-    else, error('Compare Length Error.')
+function tp = emptyNaRArangeList()
+    tp([9 1]) = arange; ls = {'[)' '()' '(]' '[]' '{)' '{]' '(}' '[}'};
+    for indx = 2: 9
+        this = ls{indx-1}; 
+        tp(indx).lb = BoundaryType(this(1));
+        tp(indx).rb = BoundaryType(this(2));
     end
 end
 
-function tf0 = validIntervalTypeRelationshipCheck(intervalType1, intervalType2, validIntervalTypeRelationship)
-    tf0 = any(strcmp([intervalType1, intervalType2],validIntervalTypeRelationship));
-end
-
-function intervalType = flag2intervalType(leftFlag, rightFlag)
-    flag = [leftFlag, rightFlag];
-    switch flag
-        case '[(', intervalType = 'openright';
-        case '((', intervalType = 'open';
-        case '[[', intervalType = 'closed';
-        case '([', intervalType = 'openleft';
-    end
-end
-
-function [leftFlag, rightFlag] = intervalType2flag(intervalType)
-    switch intervalType
-        case 'openright', leftFlag = '['; rightFlag = '(';
-        case 'open', leftFlag = '('; rightFlag = '(';
-        case 'closed', leftFlag = '['; rightFlag = '[';
-        case 'openleft', leftFlag = '('; rightFlag = '[';
-    end
+function ar = sz2ar(sz)
+    sz = arrayfun(@(x){sz(x)},1:length(sz));
+    ar(sz{:}) = arange();
 end

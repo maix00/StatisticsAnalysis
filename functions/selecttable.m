@@ -9,10 +9,10 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
     if RequestSize > 1
         for index = 1: 1: RequestSize
             [thisTable, thiscmp, ~] = selecttable(thisTable, theRequest(index, :));
-            if index > 1
-                lastcmp(lastcmp) = thiscmp;
-            elseif index == 1
+            if index == 1
                 lastcmp = thiscmp;
+            else
+                lastcmp(lastcmp) = thiscmp;
             end
             if index == RequestSize
                 cmpFL = FirstLastFindTrue(lastcmp);
@@ -58,7 +58,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
             case 'datetime'
                 Return = arange(thisValue, thisValue).ni(thisTable.(thisField));
             case 'timerange'
-                thisValue = timerange2arange(thisValue);
+                thisValue = arange(thisValue);
                 Return = thisValue.ni(thisTable.(thisField));
             case 'arange'
                 Return = thisValue.ni(thisTable.(thisField));
@@ -87,7 +87,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
             cmp = cmp(thisLast+1:end);
         end
         try
-            cmpFL = cellfun(@(x) x + thisTable.Properties.CustomProperties.DetectedImportOptions.VariableNamesLine, cmpFL, 'UniformOutput', false);
+            cmpFL = cellfun(@(x) x + thisTable.Properties.CustomProperties.detectedImportOptions.VariableNamesLine, cmpFL, 'UniformOutput', false);
         catch
             % do nothing
         end
