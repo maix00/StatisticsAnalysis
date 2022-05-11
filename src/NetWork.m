@@ -1,0 +1,29 @@
+data = readtable('../data/COVID19/daily_info.csv');
+outputSeq = table2array(data(1:818,5))';
+plot(outputSeq);
+
+inputSeq = table2array(data(1:818,13))';
+plot(inputSeq)
+
+numFeatures = 1;
+numResponses = 1;
+
+numHiddenUnits = 96*3;
+
+layers = [...
+sequenceInputLayer(numFeatures)
+lstmLayer(numHiddenUnits)
+fullyConnectedLayer(numResponses)
+regressionLayer];
+
+options = trainingOptions('adam', ...
+'MaxEpochs',250, ...
+'GradientThreshold',1, ...
+'InitialLearnRate',0.005, ...
+'LearnRateSchedule','piecewise', ...
+'LearnRateDropPeriod',125, ...
+'LearnRateDropFactor',0.2, ...
+'Verbose',0, ...
+'Plots','training-progress');
+
+net = trainNetwork(inputSeq,outputSeq,layers,options);
