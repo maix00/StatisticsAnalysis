@@ -64,7 +64,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
                 Return = thisValue.ni(thisTable.(thisField));
             case 'cell'
                 Return = zeros(size(thisTable.(thisField)));
-                for indx = 1: 1: size(thisValue, 1) * size(thisValue, 2)
+                for indx = 1: 1: numel(thisValue)
                     Return = Return | cmp_generation(thisTable, thisField, thisValue{indx});
                 end
             otherwise
@@ -77,7 +77,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
         formerLast = 0;
         while ~isempty(find(cmp, true))
             thisFirst = find(cmp,true,'first');
-            for thisLast = thisFirst: 1: length(cmp) - formerLast - thisFirst
+            for thisLast = thisFirst: length(cmp) - formerLast
                 if cmp(thisLast + 1) == 0
                     break
                 end

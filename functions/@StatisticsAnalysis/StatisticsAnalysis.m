@@ -158,6 +158,10 @@ classdef StatisticsAnalysis < handle
             elseif ips.Results.TagsGenerate
                 obj.Table = obj.TagsGenerate.addProp; 
             end
+            % Import Table if Not Generating Tags
+            if isempty(obj.Table)
+                try obj.Table = obj.ImportTable; catch; end
+            end
         end
 
         function dIO = get.detectedImportOptions(obj)
