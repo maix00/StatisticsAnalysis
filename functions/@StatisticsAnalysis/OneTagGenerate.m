@@ -2,7 +2,7 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     % OneTagGenerate generates one tag from one field/variable.
     %
     %   [thisTag, thisTagHelper, thisCell] = obj.OneTagGenerate(thisFieldName, varargin)
-    %       'CategoryUpperLimit', 'TagContinuity', 'TagCategory', 'CustomTagName', 'CustomTagFunction'
+    %       'TagContinuity', 'TagCategory', 'CustomTagName', 'CustomTagFunction'
     %   
     %   Outside and Inside usage. Invoked by <a href = "matlab:help TagsGenerate">TagsGenerate</a>.
     %   Warning: OneTagGenerate(obj, thisFieldName, varargin) not accepted.
@@ -11,7 +11,6 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
 
     ips = inputParser;
     ips.addRequired('thisFieldName', @(x)true);
-    ips.addParameter('CategoryUpperLimit', Inf, @(x)validateattributes(x, {'numeric'}, {}));
     ips.addParameter('TagContinuity', [], @(x)validateattributes(x, {'numeric', 'logical'}, {}));
     ips.addParameter('TagCategory', [], @(x)validateattributes(x, {'numeric', 'logical'}, {}));
     ips.addParameter('CustomTagName', {}, @(x)validateattributes(x, {'cell'}, {}));
@@ -42,7 +41,8 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     end
 
     % CustomTagFunction
-    NoMissing = @(x,y)y{:,1}(~ismissing(string(y{:,1}))&~strcmp(string(y{:,1}),""));
+    MissingMap = @(x,y)ismissing(string(x{:,1}))|strcmp(string(x{:,1}),"");
+    NoMissing = @(x,y)y{:,1}(~MissingMap(y,y));
     UniqueCount = @(x,y)size(NoMissing(x,y),1);
     ValueClass = @(x,y)class(nest_index(NoMissing(x,y),1));
     MissingCount = @(x,y)(size(y,1)-size(NoMissing(x,y),1));
@@ -57,6 +57,7 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
         'table', 'ValueClass', ValueClass;
         'table', 'MissingCount', MissingCount;
         'table', 'MissingRatio', @(x,y)MissingCount(x,y)/size(x,1);
+        'table', 'MissingMap', MissingMap;
         'logical', 'LogicalRatioFirstValue', LogicalRatioFirstValue;
         'logical', 'LogicalRatio', LogicalRatio;
         'categorical', 'CategoricalRatio', CategoricalRatio;
@@ -107,16 +108,16 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     if ~formerTagsFlag
         if (ips.Results.TagContinuity == 1) 
             thisTagName = 'continuous';
+        elseif (ips.Results.TagCategory == 1)
+            thisTagName = 'categorical';
         elseif unique_count == 2
             thisTagName = 'logical';
         elseif unique_count == tuple_count
             thisTagName = 'unique';
-        elseif (unique_count > 2) && (unique_count <= ips.Results.CategoryUpperLimit) && (ips.Results.TagCategory == 1)
-            thisTagName = 'categorical';
-        elseif (unique_count > ips.Results.CategoryUpperLimit) && (ips.Results.TagCategory == 0)
-            thisTagName = 'discrete';
         elseif unique_count == 1
             thisTagName = 'invariant';
+        else
+            thisTagName = 'discrete';
         end
     else
         NameCell = {'continuous', 'logical', 'unique', 'categorical', 'discrete', 'invariant'};

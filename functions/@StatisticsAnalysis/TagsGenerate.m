@@ -15,10 +15,8 @@ function obj = TagsGenerate(obj, varargin)
     %       - Custom tags not supported for now.
     %
     %   obj = obj.TagsGenerate(varargin)
-    %       'CategoryUpperLimit', 'TagContinuity', 'TagCategory', 'OutputClass'
     %
-    %   Examples:
-    %       - CategoryUpperLimit:                                            10
+    %   varargin Examples:
     %       - TagContinuity / TagCategory:                          [0 1 0 1 1]
     %       - CustomTagName:                {'TagName', [0 1 0 1 1]; otherName}
     %       - OutputClass:                        'table' or 'cell' or 'struct'
@@ -32,7 +30,6 @@ function obj = TagsGenerate(obj, varargin)
     %   WANG Yi-yang 28-Apr-2022
 
     ips = inputParser;
-    ips.addParameter('CategoryUpperLimit', Inf, @(x)validateattributes(x, {'numeric'}, {}));
     ips.addParameter('TagContinuity', [], @(x)validateattributes(x, {'numeric', 'logical'}, {}));
     ips.addParameter('TagCategory', [], @(x)validateattributes(x, {'numeric', 'logical'}, {}));
     ips.addParameter('CustomTagName', {}, @(x)validateattributes(x, {'cell'}, {}));
@@ -43,8 +40,12 @@ function obj = TagsGenerate(obj, varargin)
     % Import Table 
     if isempty(obj.Table)
         obj.Table = obj.ImportTable;
+    else % Clear Tags
+        if ~isempty(obj.Tags)
+            obj.Tags = [];
+        end
     end
-    
+
     % For each variable, Run OneTagGenerate
     variable_count = length(obj.Table.Properties.VariableNames);
     for indx = 1: 1: variable_count
@@ -57,7 +58,7 @@ function obj = TagsGenerate(obj, varargin)
         end
         % TagCategory
         if isempty(ips.Results.TagCategory)
-            TagCategory = arrayfun(@(x) 1, 1:variable_count);
+            TagCategory = arrayfun(@(x) 0, 1:variable_count);
         else
             TagCategory = ips.Results.TagCategory;
         end
@@ -70,7 +71,6 @@ function obj = TagsGenerate(obj, varargin)
             end
         end
         [temp1, temp2] = obj.OneTagGenerate(obj.Table.Properties.VariableNames{indx}, ... thisFieldName
-            'CategoryUpperLimit', ips.Results.CategoryUpperLimit, ...
             'TagContinuity', TagContinuity(indx), ...
             'TagCategory', TagCategory(indx), ...
             'CustomTagName', thisCustomTagName, ...

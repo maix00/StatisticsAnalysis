@@ -1,28 +1,40 @@
 %% Load Data
-clc;clear;
-data = readtable('../data/COVID19/daily_info.csv');
+clc; clear;
+format long
+path_daily = './data/COVID19/daily_info.csv';
+data = StatisticsAnalysis( ...
+    'TablePath', path_daily, ...
+    'ImportOptions', { ...
+        'VariableTypes', { ...
+            'new_vaccinations', 'double';
+            'total_vaccinations', 'double' ...
+            }; ...
+        'SelectedVariableNames', {'date', 'new_cases', 'total_cases'} ...
+        }, ...
+    'SelectTableOptions', { ...
+        'location', 'France'; ... Country
+        'date', { ...
+            arange(["2020-01-01", "2020-12-31"], 'closed')
+            } ... Time Range
+        }, ... % Will Automatically Select Table Before Importing Table
+     'TagsGenerateOptions', { ...
+        'TagContinuity', [0 1 1]; ...
+        'CustomTagName', {'centralization', [0 1 1]}; ...
+        'CustomTagFunction', { ...
+            'centralization', 'Centralized', @(x,y)(x{:,1}-tsnanmean(x{:,1}))/tsnanstd(x{:,1}); ...
+            } ...
+        }...
+    ).Table;
 
 %% Settings and Training
 % Here using total_cases to predict new_cases
-XSeq = table2array(data(:,5));
-YSeq = table2array(data(:,4));
-[nx,~] = find(isnan(XSeq));
-[ny,~] = find(isnan(YSeq));
-DelN = unique([nx;ny]);
-for ii = DelN
-    XSeq(ii,:) = [];
-    YSeq(ii,:) = [];
-end
-XSeq = XSeq';
-YSeq = YSeq';
-muX = mean(XSeq);
-sigX = std(XSeq);
-XSeq = (XSeq-muX)/sigX;
-muY = mean(YSeq);
-sigY = std(YSeq);
-YSeq = (YSeq-muY)/sigY;
+MissingMap = data.Properties.CustomProperties.MissingMap;
+MissingMap = MissingMap{2} | MissingMap{3};
+Centralized = data.Properties.CustomProperties.Centralized;
+XSeq = Centralized{3}(~MissingMap)';
+YSeq = Centralized{2}(~MissingMap)';
 
-
+%%
 trainLength = floor(0.5*size(XSeq,2));
 XtrainSeq = XSeq(:,1:trainLength);
 YtrainSeq = YSeq(1:trainLength);

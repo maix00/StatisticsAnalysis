@@ -268,12 +268,17 @@ classdef StatisticsAnalysis < handle
                     end
                 end
                 fn(map) = []; lgMap(map') = []; copy = rmfield(copy, fn); opt(lgMap) = struct; lg = length(lgMap);
-                cmd = arrayfun(@(x)strcat("idx",num2str(x),','), 1:lg); cmd = strcat(cmd{:}); cmd = cmd(1:end-1); cmd1 = ['[', cmd, ']'];
-                for idx = 1: numel(opt)
-                    tp1 = [cmd1, ' = ind2sub(lgMap, idx);']; eval(tp1);
-                    for idxx = 1: lg, numstr = num2str(idxx);
-                        tp2 = ['opt(idx).(fn{' numstr '}) = obj.ImportOptions.(fn{' numstr '}){1}{idx' numstr '};']; eval(tp2);
+                cmd = arrayfun(@(x)strcat("idx",num2str(x),','), 1:lg);
+                if ~isempty(cmd)
+                    cmd = strcat(cmd{:}); cmd = cmd(1:end-1); cmd1 = ['[', cmd, ']'];
+                    for idx = 1: numel(opt)
+                        tp1 = [cmd1, ' = ind2sub(lgMap, idx);']; eval(tp1);
+                        for idxx = 1: lg, numstr = num2str(idxx);
+                            tp2 = ['opt(idx).(fn{' numstr '}) = obj.ImportOptions.(fn{' numstr '}){1}{idx' numstr '};']; eval(tp2);
+                        end
                     end
+                else
+                    opt = cell.empty;
                 end
                 obj.ImportOptions = {copy, 'Invariant'; opt, 'Variant'};
             end
