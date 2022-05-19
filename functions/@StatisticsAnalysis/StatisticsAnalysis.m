@@ -152,10 +152,16 @@ classdef StatisticsAnalysis < handle
             % Import Options Un-nest
             obj = obj.ImportOptionsUnnest;
             % Tags Generation
-            if ~isempty(ips.Results.TagsGenerateOptions)
-                temp = transpose(ips.Results.TagsGenerateOptions);
-                obj.Table = obj.TagsGenerate(temp{:}).addProp;
-            elseif ips.Results.TagsGenerate
+            if isempty(ips.Results.TagsGenerateOptions) && iscell(ips.Results.TagsGenerate)
+                TagsGenerateOptions = ips.Results.TagsGenerate;
+            else
+                TagsGenerateOptions = ips.Results.TagsGenerateOptions;
+                TagsGenerate = ips.Results.TagsGenerate;
+            end
+            if ~isempty(TagsGenerateOptions)
+                tp = transpose(TagsGenerateOptions);
+                obj.Table = obj.TagsGenerate(tp{:}).addProp;
+            elseif TagsGenerate
                 obj.Table = obj.TagsGenerate.addProp; 
             end
             % Import Table if Not Generating Tags

@@ -15,6 +15,7 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     ips.addParameter('TagCategory', [], @(x)validateattributes(x, {'numeric', 'logical'}, {}));
     ips.addParameter('CustomTagName', {}, @(x)validateattributes(x, {'cell'}, {}));
     ips.addParameter('CustomTagFunction', {}, @(x)validateattributes(x, {'cell'}, {}));
+    ips.addParameter('QuickStyle', [], @(x)true); % Value be the CustomTagNames to be analysed
     ips.parse(thisFieldName, varargin{:})
 
     % Preservation
@@ -139,6 +140,9 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
             end
         end
     end
+    if ~iscell(thisTagName)
+        thisTagName = {thisTagName};
+    end
     if formerTagsFlag
         for indx = 1: 1: length(formerTagNames)
             if ~all(strcmp(thisTagName, formerTagNames{indx}))
@@ -149,38 +153,50 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     thisTag = {thisTagName}; thisTagHelper = {'TagNames'};
 
     % Custom Tag Function
-    if ~isempty(CustomTagFunction)
-        for indx = 1: 1: size(CustomTagFunction, 1)
-            thisTargetTagName = CustomTagFunction{indx, 1};
-            thisTagHelperName = CustomTagFunction{indx, 2};
-            thisFunction = CustomTagFunction{indx, 3};
-            if strcmp(thisTargetTagName, 'table') || any(strcmp(thisTagName, thisTargetTagName))
-                try
-                    thisValue = thisFunction(thisColumnTable, thisUniqueColumnTable);
-                catch
-                    warning(strcat('Variable Input Class / Function Handle Syntax Error Warning: ', thisTargetTagName, '/', thisTagHelperName, '.'));
-                    thisValue = [];
-                end
-            else
+    if ~isempty(ips.Results.QuickStyle)
+        try
+            list = ips.Results.QuickStyle;
+            if size(list, 2)>1
+                list = list';
+            end
+            tab = cell2table(CustomTagFunction);
+            tab = selecttable(tab, {'CustomTagFunction2', list});
+            CustomTagFunction = table2cell(tab);
+        catch
+        end
+    elseif (isempty(ips.Results.QuickStyle) && iscell(ips.Results.QuickStyle))
+        CustomTagFunction = {};
+    end
+    for indx = 1: 1: size(CustomTagFunction, 1)
+        thisTargetTagName = CustomTagFunction{indx, 1};
+        thisTagHelperName = CustomTagFunction{indx, 2};
+        thisFunction = CustomTagFunction{indx, 3};
+        if strcmp(thisTargetTagName, 'table') || any(strcmp(thisTagName, thisTargetTagName))
+            try
+                thisValue = thisFunction(thisColumnTable, thisUniqueColumnTable);
+            catch
+                warning(strcat('Variable Input Class / Function Handle Syntax Error Warning: ', thisTargetTagName, '/', thisTagHelperName, '.'));
                 thisValue = [];
             end
-            % Append
-            if obj.OneTagFlag
-                Bool1 = ~any(isempty(thisValue));
-                try 
-                    Bool2 = ~any(isnan(thisValue));
-                    Bool = Bool1 && Bool2;
-                catch
-                    Bool = Bool1;
-                end
-                if Bool
-                    thisTag = [thisTag, {thisValue}];
-                    thisTagHelper = [thisTagHelper, {thisTagHelperName}];
-                end
-            else
+        else
+            thisValue = [];
+        end
+        % Append
+        if obj.OneTagFlag
+            Bool1 = ~any(isempty(thisValue));
+            try 
+                Bool2 = ~any(isnan(thisValue));
+                Bool = Bool1 && Bool2;
+            catch
+                Bool = Bool1;
+            end
+            if Bool
                 thisTag = [thisTag, {thisValue}];
                 thisTagHelper = [thisTagHelper, {thisTagHelperName}];
             end
+        else
+            thisTag = [thisTag, {thisValue}];
+            thisTagHelper = [thisTagHelper, {thisTagHelperName}];
         end
     end
     % Field Name

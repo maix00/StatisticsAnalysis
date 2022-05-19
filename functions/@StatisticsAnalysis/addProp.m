@@ -33,7 +33,7 @@ function table = addProp(obj, varargin)
                 table = rmprop(table, thisFieldName);
                 table = addprop(table, thisFieldName, 'variable');
             end
-            table.Properties.CustomProperties.(thisFieldName) = obj.Tags{thisFieldName, :};
+            table.Properties.CustomProperties.(thisFieldName) = table2cell(obj.Tags(thisFieldName, :));
         end
     else
         warning('Syntax Error Warning. No Tags to add.');

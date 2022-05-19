@@ -35,20 +35,17 @@ function obj = TagsGenerate(obj, varargin)
     ips.addParameter('CustomTagName', {}, @(x)validateattributes(x, {'cell'}, {}));
     ips.addParameter('CustomTagFunction', {}, @(x)validateattributes(x, {'cell'}, {}));
     ips.addParameter('OutputClass', 'table', @(x)validateattributes(x, {'char', 'string'}, {}));
+    ips.addParameter('QuickStyle', [], @(x)true);
     ips.parse(varargin{:})
 
     % Import Table 
     if isempty(obj.Table)
         obj.Table = obj.ImportTable;
-    else % Clear Tags
-        if ~isempty(obj.Tags)
-            obj.Tags = [];
-        end
     end
 
     % For each variable, Run OneTagGenerate
     variable_count = length(obj.Table.Properties.VariableNames);
-    for indx = 1: 1: variable_count
+    for idx = 1: 1: variable_count
         obj.OneTagFlag = false;
         % TagContinuity
         if isempty(ips.Results.TagContinuity)
@@ -67,15 +64,21 @@ function obj = TagsGenerate(obj, varargin)
         if ~isempty(ips.Results.CustomTagName)
             CustomTagName = ips.Results.CustomTagName;
             for subindx = 1: 1: size(CustomTagName, 1)
-                thisCustomTagName = [thisCustomTagName; {CustomTagName{subindx,1}, CustomTagName{subindx,2}(indx)}];
+                thisCustomTagName = [thisCustomTagName; {CustomTagName{subindx,1}, CustomTagName{subindx,2}(idx)}];
             end
         end
-        [temp1, temp2] = obj.OneTagGenerate(obj.Table.Properties.VariableNames{indx}, ... thisFieldName
-            'TagContinuity', TagContinuity(indx), ...
-            'TagCategory', TagCategory(indx), ...
+        [temp1, temp2] = obj.OneTagGenerate(obj.Table.Properties.VariableNames{idx}, ... thisFieldName
+            'TagContinuity', TagContinuity(idx), ...
+            'TagCategory', TagCategory(idx), ...
             'CustomTagName', thisCustomTagName, ...
-            'CustomTagFunction', ips.Results.CustomTagFunction ...
+            'CustomTagFunction', ips.Results.CustomTagFunction, ...
+            'QuickStyle', ips.Results.QuickStyle ...
             );
+        % Clear obj.Tags
+        if (idx == 1) && ~isempty(obj.Tags)
+            obj.Tags = [];
+        end
+        % New obj.Tags
         obj.Tags = [obj.Tags; temp1];
         % Recover
         obj.OneTagFlag = true;
@@ -95,4 +98,6 @@ function obj = TagsGenerate(obj, varargin)
     catch
         warning('Output Tags Syntax Error Warning. TagsGenerate.')
     end
+    % Add Properties
+    obj.Table = obj.addProp;
 end
