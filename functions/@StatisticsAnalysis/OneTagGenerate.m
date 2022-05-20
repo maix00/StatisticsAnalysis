@@ -42,8 +42,8 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     end
 
     % CustomTagFunction
-    MissingMap = @(x,y)ismissing(string(x{:,1}))|strcmp(string(x{:,1}),"");
-    NoMissing = @(x,y)y{:,1}(~MissingMap(y,y));
+    MissingMap = @(x,y)ismissing(x{:,1});
+    NoMissing = @(x,y)rmmissing(y{:,1});
     UniqueCount = @(x,y)size(NoMissing(x,y),1);
     ValueClass = @(x,y)class(nest_index(NoMissing(x,y),1));
     MissingCount = @(x,y)(size(y,1)-size(NoMissing(x,y),1));

@@ -63,15 +63,25 @@ function obj = TagsGenerate(obj, varargin)
         thisCustomTagName = {};
         if ~isempty(ips.Results.CustomTagName)
             CustomTagName = ips.Results.CustomTagName;
-            for subindx = 1: 1: size(CustomTagName, 1)
-                thisCustomTagName = [thisCustomTagName; {CustomTagName{subindx,1}, CustomTagName{subindx,2}(idx)}];
+            for subidx = 1: size(CustomTagName, 1)
+                thisCustomTagName = [thisCustomTagName; {CustomTagName{subidx,1}, CustomTagName{subidx,2}(idx)}];
             end
         end
+        % CustomTagFunction
+        thisCustomTagFunction = ips.Results.CustomTagFunction;
+        for subidx = 1: size(thisCustomTagFunction, 1)
+            if isnumeric(thisCustomTagFunction{subidx})
+                if thisCustomTagFunction{subidx}(idx)
+                    thisCustomTagFunction{subidx} = 'table';
+                end
+            end
+        end
+        % Tag Generation
         [temp1, temp2] = obj.OneTagGenerate(obj.Table.Properties.VariableNames{idx}, ... thisFieldName
             'TagContinuity', TagContinuity(idx), ...
             'TagCategory', TagCategory(idx), ...
             'CustomTagName', thisCustomTagName, ...
-            'CustomTagFunction', ips.Results.CustomTagFunction, ...
+            'CustomTagFunction', thisCustomTagFunction, ...
             'QuickStyle', ips.Results.QuickStyle ...
             );
         % Clear obj.Tags

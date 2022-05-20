@@ -12,9 +12,4 @@ function cmpFL = FirstLastFindTrue(cmp)
         formerLast = formerLast + thisLast;
         cmp = cmp(thisLast+1:end);
     end
-    try
-        cmpFL = cellfun(@(x) x + thisTable.Properties.CustomProperties.detectedImportOptions.VariableNamesLine, cmpFL, 'UniformOutput', false);
-    catch
-        % do nothing
-    end
 end

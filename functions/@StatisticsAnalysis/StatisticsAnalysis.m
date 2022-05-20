@@ -198,9 +198,8 @@ classdef StatisticsAnalysis < handle
             if ~isempty(SelectTableOptions) && ~isempty(obj.DetectedImportOptions)
                 obj.DetectedImportOptions.SelectedVariableNames = SelectTableOptions(:,1)';
                 tempTable = readtable(obj.TablePath, obj.DetectedImportOptions);
-                tempTable = addprop(tempTable, 'detectedImportOptions', {'table'});
-                tempTable.Properties.CustomProperties.detectedImportOptions = obj.originalDetectedImportOptions;
                 [~, ~, FirstLast] = selecttable(tempTable, SelectTableOptions); 
+                try FirstLast = cellfun(@(x) x + obj.originalDetectedImportOptions.VariableNamesLine, FirstLast, 'UniformOutput', false); catch; end
                 DataLinesOptions = {'DataLines', {FirstLast}};
                 if isempty(obj.ImportOptions), obj.ImportOptions = struct('DataLines', {FirstLast});
                 else

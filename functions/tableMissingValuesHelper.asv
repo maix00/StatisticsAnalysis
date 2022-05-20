@@ -411,9 +411,9 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                             thisincrement = increment / (tpLast - tpFormer - 1);
                             switch InterpolationStyle
                                 case 'Linear'
-                                    tpT(rowidx,2) = {tpT{tpFormer, AdditionWhere} + thisincrement * (rowidx - tpFormer)};
+                                    tpT(rowidx,2) = {tpT{tpLast, AdditionWhere} + thisincrement * (rowidx - tpLast)};
                                 case 'LinearRound'
-                                    tpT(rowidx,2) = {round(tpT{tpFormer, AdditionWhere} + thisincrement * (rowidx - tpFormer))};
+                                    tpT(rowidx,2) = {round(tpT{tpLast, AdditionWhere} + thisincrement * (rowidx - tpLast))};
                             end
                         end
                     end
