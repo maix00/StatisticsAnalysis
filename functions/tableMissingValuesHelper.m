@@ -2,8 +2,8 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
 
     ips = inputParser;
     ips.addParameter('VariableNames', [], @(x)true);
-    ips.addParameter('Style', [], @(x)any(validatestring(x,{'Increment-Addition','Interpolation','Constant'})));
-    ips.addParameter('InterpolationStyle', 'Linear', @(x)any(validatestring(x,{'Linear', 'LinearRound'})));
+    ips.addParameter('Style', 'Constant', @(x)any(validatestring(x,{'Increment-Addition','Interpolation','Constant'})));
+    ips.addParameter('InterpolationStyle', 'LinearRound', @(x)any(validatestring(x,{'Linear', 'LinearRound'})));
     ips.addParameter('ConstantValues', [], @(x)true);
     ips.parse(varargin{:})
     
@@ -27,25 +27,34 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
             end
         case 'Interpolation', StyleFlag = 'I';
         case 'Constant'
-            if ~isempty(ips.Results.ConstantValues), StyleFlag = 'C';
-            else
-                error('Constant Style requires inputing parameter ConstantValues')
+            if isempty(ips.Results.ConstantValues)
+                warning('No parameter ConstantValues input -> Will Remove missing rows.')
             end
+            StyleFlag = 'C';
     end
 
     % List Generation
     switch StyleFlag
         case 'IA'
+            T = IncrementAdditionRemoveCracksHelper(T, VariableNames);
             [list, IncrementWhere, AdditionWhere, len] = IncrementAdditionListGenerateHelper(T, VariableNames);
             [T, tplist] = IncrementAdditionRemoveLastLinesHelper(T, list, len);
             [T, tplist] = IncrementAdditionFirstRowHelper(T, tplist, IncrementWhere, AdditionWhere, VariableNames, ips.Results.ConstantValues);
             tplistgroup = IncrementAdditionListGroupHelper(tplist);
         case {'I', 'C'}
             list = struct;
-            for idx = 1: length(VariableNames)
-                thisWhere = strcmp(T.Properties.VariableNames, VariableNames(idx));
-                thisMissingMap = ismissing(T(:,thisWhere));
-                [list(:).(VariableNames{idx})] = deal(FirstLastFindTrue(thisMissingMap));
+            if isa(VariableNames, 'char')
+                for idx = 1: size(VariableNames, 1)
+                    thisWhere = strcmp(T.Properties.VariableNames, VariableNames(idx,:));
+                    thisMissingMap = ismissing(T(:,thisWhere));
+                    list.(VariableNames(idx,:)) = FirstLastFindTrue(thisMissingMap);
+                end
+            else
+                for idx = 1: length(VariableNames)
+                    thisWhere = strcmp(T.Properties.VariableNames, VariableNames{idx});
+                    thisMissingMap = ismissing(T(:,thisWhere));
+                    list.(VariableNames{idx}) = FirstLastFindTrue(thisMissingMap);
+                end
             end
     end
 
@@ -55,6 +64,32 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
             T = IncrementAdditionFixingHelper(T, tplist, tplistgroup, IncrementWhere, AdditionWhere, ips.Results.InterpolationStyle);
         case 'I'
         case 'C'
+    end
+    
+    function T = IncrementAdditionRemoveCracksHelper(T, VariableNames)
+        thisIncrementWhere = strcmp(T.Properties.VariableNames, VariableNames(1));
+        thisAdditionWhere = strcmp(T.Properties.VariableNames, VariableNames(end));
+        lastVal = T{1, thisAdditionWhere};
+        lastRow = 1;
+%         map = false([size(T,1),1]);
+        NaNFlag = false;
+        for idxx = 2: size(T, 1)
+            if T{idxx, thisAdditionWhere} < lastVal
+%                 T{idxx, thisIncrementWhere|thisAdditionWhere} = NaN;
+%                 map(idxx) = true;
+                NaNFlag = true;
+            else
+                if NaNFlag
+%                     T{idxx, thisIncrementWhere} = NaN;
+                    warning(['Increment-Addition. Addition was decreasing at rows (', sprintf('%i', lastRow), ',', sprintf('%i', idxx), ')']); %, '), thus setting Increment & Addition to be NaN.']);
+                end
+                lastVal = T{idxx, thisAdditionWhere};
+                lastRow = idxx;
+                NaNFlag = false;
+            end
+        end
+%         T(map,:) = [];
+%         warning('Addition was decreasing, thus removed.');
     end
 
     function [list, IncrementWhere, AdditionWhere, len] = IncrementAdditionListGenerateHelper(T, VariableNames)
@@ -264,8 +299,10 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                                             if list(thisidx).MiddleLines(1) == list(lastidx).BottomLines(end) + 1
                                                 thislistGroup.GroupLines = [idxx, thisidx];
                                                 thislistGroup.InterpolationLines = [list(idxx).MiddleLines(1)-1, list(thisidx).MiddleLines(end)];
-                                                thislistGroup.InterpolationFlag = ']';
+                                            else
+                                                thislistGroup.InterpolationLines = [list(idxx).MiddleLines(1)-1, list(lastidx).MiddleLines(end)];
                                             end
+                                            thislistGroup.InterpolationFlag = ']';
                                             loopBool = false;
                                         case 'l'
                                             if list(thisidx).MiddleLines(1) == list(lastidx).BottomLines(end) + 1
@@ -276,9 +313,8 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                                             loopBool = false;
                                         case 'r'
                                             if list(thisidx).MiddleLines(1) == list(lastidx).BottomLines(end) + 1
-                                                % do nothing, continue to loop
+                                                thislistGroup.GroupLines = [idxx, thisidx];
                                                 if thisidx == length(list)
-                                                    thislistGroup.GroupLines = [idxx, thisidx];
                                                     thislistGroup.InterpolationLines = [list(idxx).MiddleLines(1)-1, list(thisidx).MiddleLines(end)];
                                                     thislistGroup.InterpolationFlag = ']';
                                                     loopBool = false;
@@ -315,8 +351,8 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                 T = IncrementAdditionFixingHelperBottom(T, list, thislistidx, IncrementWhere, AdditionWhere);
                 if ~isempty(listgroup(groupidx).InterpolationLines)
                     T = IncrementAdditionFixingHelperInterpolation(T, IncrementWhere, AdditionWhere, listgroup(groupidx).InterpolationLines, listgroup(groupidx).InterpolationFlag, InterpolationStyle);
-                    T = IncrementAdditionFixingHelperSweep(T, list, thislistidx, IncrementWhere, AdditionWhere);
                 end
+                T = IncrementAdditionFixingHelperSweep(T, list, thislistidx, IncrementWhere, AdditionWhere);
             else
                 T = IncrementAdditionFixingHelperTop(T, list, listgroup(groupidx).GroupLines(1), IncrementWhere, AdditionWhere);
                 T = IncrementAdditionFixingHelperBottom(T, list, listgroup(groupidx).GroupLines(end), IncrementWhere, AdditionWhere);
@@ -351,6 +387,10 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                     for rowN = list(listidx).BottomLines(end): -1: list(listidx).BottomLines(1) - 1
                         T(rowN, AdditionWhere) = {T{rowN+1, AdditionWhere} - T{rowN+1, IncrementWhere}};
                     end
+                case 'o'
+                    rowN = list(listidx).MiddleLines(end);
+                    T(rowN, AdditionWhere) = {T{rowN+1, AdditionWhere} - T{rowN+1, IncrementWhere}};
+                    T(rowN, IncrementWhere) = {T{rowN, AdditionWhere} - T{rowN-1, AdditionWhere}};
             end
         end
 
@@ -374,22 +414,27 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                     end
                 case ']'
                     tpT = T(startRow:endRow, IncrementWhere|AdditionWhere);
+                    if find(IncrementWhere,1) < find(AdditionWhere, 1)
+                        tpIncrementWhere = 1; tpAdditionWhere = 2;
+                    else
+                        tpIncrementWhere = 2; tpAdditionWhere = 1;
+                    end
                     valueScope = T{endRow, AdditionWhere} - T{startRow, AdditionWhere};
                     blockNum = 0;
                     blockRowList = [];
                     blockValueScopeList = [];
                     lastMissing = true;
                     for idxx = 2: size(tpT, 1)
-                        if lastMissing && ~ismissing(tpT{idxx, 1})
+                        if lastMissing && ~ismissing(tpT{idxx, tpIncrementWhere})
                             blockNum = blockNum + 1;
                             thisBlock = [idxx, idxx];
                             lastMissing = false;
-                        elseif lastMissing && ismissing(tpT{idxx, 1})
+                        elseif lastMissing && ismissing(tpT{idxx, tpIncrementWhere})
                             lastMissing = true;
-                        elseif ~lastMissing && ~ismissing(tpT{idxx, 1})
+                        elseif ~lastMissing && ~ismissing(tpT{idxx, tpIncrementWhere})
                             thisBlock(end) = idxx;
                             lastMissing = false;
-                        elseif ~lastMissing && ismissing(tpT{idxx, 1})
+                        elseif ~lastMissing && ismissing(tpT{idxx, tpIncrementWhere})
                             blockRowList = [blockRowList, thisBlock(1):thisBlock(end)];
                             blockValueScopeList = [blockValueScopeList, sum(tpT{thisBlock(1):thisBlock(end), 1})];
                             lastMissing = true;
@@ -399,7 +444,7 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                     increment = diffScope / (blockNum + 1);
                     for rowidx = 2: size(tpT, 1) - 1
                         if any(blockRowList == rowidx)
-                            tpT(rowidx,2) = {tpT{rowidx-1,2} + tpT{rowidx,1}};
+                            tpT(rowidx,tpAdditionWhere) = {tpT{rowidx-1,tpAdditionWhere} + tpT{rowidx,tpIncrementWhere}};
                         else
                             tp = find(blockRowList < rowidx, 1, 'last');
                             if isempty(tp)
@@ -408,7 +453,7 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                                 tpFormer = blockRowList(tp);
                             end
                             if tp == size(blockRowList, 2)
-                                tpLast = size(tpT, 1);
+                                tpLast = size(tpT, tpIncrementWhere);
                             elseif isempty(tp)
                                 tpLast = blockRowList(1);
                             else
@@ -417,9 +462,9 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                             thisincrement = increment / (tpLast - tpFormer - 1);
                             switch InterpolationStyle
                                 case 'Linear'
-                                    tpT(rowidx,2) = {tpT{tpFormer, AdditionWhere} + thisincrement * (rowidx - tpFormer)};
+                                    tpT(rowidx,tpAdditionWhere) = {tpT{tpFormer, tpAdditionWhere} + thisincrement * (rowidx - tpFormer)};
                                 case 'LinearRound'
-                                    tpT(rowidx,2) = {round(tpT{tpFormer, AdditionWhere} + thisincrement * (rowidx - tpFormer))};
+                                    tpT(rowidx,tpAdditionWhere) = {round(tpT{tpFormer, tpAdditionWhere} + thisincrement * (rowidx - tpFormer))};
                             end
                         end
                     end
@@ -458,6 +503,30 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
         end
 
         function T = IncrementAdditionFixingHelperRectify(T, IncrementWhere, AdditionWhere, InterpolationStyle)
+            for rowidx = 2: size(T, 1)
+                if T{rowidx, IncrementWhere} < 0
+                    T{rowidx, IncrementWhere} = 0;
+                    switch InterpolationStyle
+                        case {'Linear', 'LinearRound'}
+                            T{1:rowidx-1,IncrementWhere|AdditionWhere} = T{1:rowidx-1,IncrementWhere|AdditionWhere} * T{rowidx, AdditionWhere} / T{rowidx-1, AdditionWhere};
+                            warning(['Increment-Addition. Data before row ', sprintf('%i', rowidx), ' were linearly scaled, due to decreasing addition.'])
+                    end
+                end
+                
+            end
+            switch InterpolationStyle
+                case 'LinearRound'
+                    T{:,AdditionWhere} = round(T{:,AdditionWhere});
+                    T{1,IncrementWhere} = T{1,AdditionWhere};
+                    for rowidx = 2: size(T, 1)
+                        T{rowidx, IncrementWhere} = T{rowidx, AdditionWhere} - T{rowidx-1, AdditionWhere};
+                    end
+                otherwise
+                    for rowidx = 2: size(T, 1)
+                        T{rowidx, AdditionWhere} = T{rowidx-1, AdditionWhere} + T{rowidx, IncrementWhere};
+                    end
+            end
+            % Checking Addition
             for rowidx = 2: size(T, 1)
                 switch InterpolationStyle
                     case 'Linear'

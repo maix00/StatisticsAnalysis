@@ -1,9 +1,0 @@
-\contentsline {section}{\numberline {1}整体分析思路}{1}{section.1}% 
-\contentsline {section}{\numberline {2}数据的导入}{1}{section.2}% 
-\contentsline {section}{\numberline {3}数据的缺失值处理}{2}{section.3}% 
-\contentsline {section}{\numberline {4}数据分析过程}{2}{section.4}% 
-\contentsline {subsection}{\numberline {4.1}一般的统计指标}{2}{subsection.4.1}% 
-\contentsline {subsection}{\numberline {4.2}聚类分析}{2}{subsection.4.2}% 
-\contentsline {subsection}{\numberline {4.3}疫情数据的分析预测}{2}{subsection.4.3}% 
-\contentsline {section}{\numberline {A}\texttt {StatisticsAnalysis}类}{3}{appendix.A}% 
-\contentsline {section}{\numberline {B}\texttt {selecttable}函数}{4}{appendix.B}% 

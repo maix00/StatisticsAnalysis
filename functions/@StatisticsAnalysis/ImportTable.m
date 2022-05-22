@@ -8,6 +8,7 @@ function table = ImportTable(obj)
     
     if ~isempty(obj.TablePath)
         if ~isempty(obj.ImportOptions)
+            obj = obj.ImportOptionsUnnest; % Import Options Un-nest
             if isempty(obj.DetectedImportOptions)
                 obj = obj.DetectImport;
             end
