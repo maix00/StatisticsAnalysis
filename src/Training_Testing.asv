@@ -5,45 +5,44 @@ format long
 XSeq_all = [];
 YSeq_all = [];
 
-% Load Data
-
-
-path = './data/COVID19/country.csv';
-properties = StatisticsAnalysis( ...
-    'TablePath', path...
-    ).Table;
-countries = StatisticsAnalysis( ...
-    'TablePath', path, ...
-    'ImportOptions', { ...
-    'SelectedVariableNames', {'location'}...
-    }...
-    ).Table;
-
-for country_name = {'France','China','Australia'}
-
+% Load Data: pandemic data
+for country_name = {'France', 'China','Australia'}
+    
     % Load Data: pandemic data
     path_daily = './data/COVID19/daily_info.csv';
     data = StatisticsAnalysis( ...
         'TablePath', path_daily, ...
         'ImportOptions', { ...
-        'VariableTypes', { ...
-        'new_vaccinations', 'double';
-        'total_vaccinations', 'double' ...
-        }; ...
-        'SelectedVariableNames', {'date', 'new_cases', 'total_cases'} ...
-        }, ...
+            'VariableTypes', { ...
+                'new_vaccinations', 'double';
+                'total_vaccinations', 'double' ...
+                }; ...
+            'SelectedVariableNames', {'date', 'new_cases', 'total_cases'} ...
+            }, ...
         'SelectTableOptions', { ...
-        'location', country_name; ... Country
-        'date', { ...
-        arange(["2020-01-01", "2020-12-31"], 'closed')
-        } ... Time Range
-        } ... % Will Automatically Select Table Before Importing Table
+            'location', country_name; ... Country
+            'date', { ...
+                arange(["2020-01-01", "2020-12-31"], 'closed')
+                } ... Time Range
+            } ... % Will Automatically Select Table Before Importing Table
         ).Table;
     data = tableMissingValuesHelper(data, ...
         'VariableNames', {'new_cases', 'total_cases'}, ...
         'Style', 'Increment-Addition' ...
         );
-
+    
+    % Load Data: country data
+    path = './data/COVID19/country.csv';
+    properties = StatisticsAnalysis( ...
+        'TablePath', path...
+        ).Table;
+    countries = StatisticsAnalysis( ...
+        'TablePath', path, ...
+        'ImportOptions', { ...
+            'SelectedVariableNames', {'location'}...
+            }...
+        ).Table;
+    
     % Dealing with missing data
     for col = 1:13
         row = ismissing(properties(:,col));
@@ -56,7 +55,7 @@ for country_name = {'France','China','Australia'}
         muP = mean(properties(:, col));
         properties(:,col) = (properties(:,col)-muP)/sigP;
     end
-
+    
     m = 0;
     for row = 1:size(countries,1)
         a = countries{row,1};
@@ -66,16 +65,16 @@ for country_name = {'France','China','Australia'}
     end
     % obtain relevant values
     values = properties(m,:)';
-
+    
     % Settings and Training
     % Here using total_cases, values to predict new_cases
-
+    
     YSeq = table2array(data(:,2))';
     XSeq = zeros(5+size(values,1),size(YSeq,2));
     for col = 1:size(YSeq,2)
         XSeq(6:end, col) = values;
     end
-
+    
     total_cases = table2array(data(:,3))';
     muX = mean(total_cases);
     sigX = std(total_cases);
@@ -87,12 +86,10 @@ for country_name = {'France','China','Australia'}
     XSeq_all = [XSeq_all,XSeq];
     YSeq_all = [YSeq_all,YSeq];
 end
-
 muY = mean(YSeq_all);
 sigY = std(YSeq_all);
 YSeq_all = (YSeq_all - muY)/sigY;
 
-% Randomize
 r = randperm(size(XSeq_all,2));
 XSeq_all = XSeq_all(:,r);
 YSeq_all = YSeq_all(:,r);
