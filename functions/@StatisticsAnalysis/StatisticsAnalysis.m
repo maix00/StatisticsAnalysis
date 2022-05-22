@@ -130,9 +130,12 @@ classdef StatisticsAnalysis < handle
             ips.addParameter('TagsGenerate', false, @(x)true);
             ips.addParameter('TagsGenerateOptions', {}, @(x)true);
             ips.parse(varargin{:})
-            %
+            
             obj.TablePath = ips.Results.TablePath;
             obj.Table = ips.Results.Table;
+            obj.ImportOptions = OptionsSizeHelper(ips.Results.ImportOptions);
+            SelectTableOptions = OptionsSizeHelper(ips.Results.SelectTableOptions);
+            
             % DetectedImportOptions Initialize
             if ~isempty(obj.TablePath)
                 obj.originalDetectedImportOptions = detectImportOptions(obj.TablePath); 
@@ -143,19 +146,80 @@ classdef StatisticsAnalysis < handle
             if ~isempty(ips.Results.DetectedImportOptions)
                 obj.DetectedImportOptions = ips.Results.DetectedImportOptions; 
             end
-            % Import Options
-            obj.ImportOptions = ips.Results.ImportOptions;
-            % Select Table and Update ImportOptions before Import the required Table
-            if ~isempty(ips.Results.SelectTableOptions)
-                obj = obj.DetectedImportOptionsUpdateFromSelectTable(ips.Results.SelectTableOptions); 
+            % Import and Select Table
+            if ~isempty(obj.TablePath) && ~isempty(SelectTableOptions)
+                selectionVariables = SelectTableOptions(:,1)';
+                if ~isempty(obj.ImportOptions)
+                    if any(strcmp(obj.ImportOptions(:,1), 'SelectedVariableNames'))
+                        tpmap = strcmp(obj.ImportOptions(:,1), 'SelectedVariableNames');
+                        tpVariables = obj.ImportOptions{tpmap,2};
+                        obj.ImportOptions{tpmap,2} = unique([tpVariables, selectionVariables]);
+                    end
+                end
+                obj = obj.ImportOptionsUnnest; % Import Options Un-nest
+                obj.Table = obj.ImportTable;
+                for idx = 1: size(SelectTableOptions, 1)
+                    switch class(SelectTableOptions{idx, 2})
+                        case 'arange'
+                            if isa(SelectTableOptions{idx, 2}(1).range{1}, 'datetime') || isa(SelectTableOptions{idx, 2}(1).range{1}, 'duration')
+                                thisTimeRange = SelectTableOptions{idx, 2}.ar2tr;
+                                SelectTableOptions(idx, :) = [];
+                            end
+                            break
+                        case 'timerange'
+                            thisTimeRange = SelectTableOptions{idx, 2};
+                            SelectTableOptions(idx, :) = [];
+                            break
+                        case 'cell'
+                            flag = true;
+                            for idxx = 1: numel(SelectTableOptions{idx, 2})
+                                switch class(SelectTableOptions{idx, 2}{idxx})
+                                    case 'arange', SelectTableOptions{idx, 2}{idxx} = SelectTableOptions{idx, 2}{idxx}.ar2tr;
+                                    case 'timerange' % do nothing
+                                    otherwise, flag = false; break
+                                end
+                            end
+                            if flag
+                                thisTimeRange = SelectTableOptions{idx, 2};
+                            end
+                    end
+                end
+                obj.Table = selecttable(obj.Table, SelectTableOptions, true);
+                if exist('thisTimeRange', 'var')
+                    try obj.Table = table2timetable(obj.Table); catch; end
+                    try 
+                        switch class(thisTimeRange)
+                            case 'timerange'
+                                obj.Table = obj.Table(thisTimeRange, :);
+                            case 'cell'
+                                tp = obj.Table;
+                                obj.Table(:,:) = [];
+                                for idxx = 1: numel(thisTimeRange)
+                                    obj.Table = [obj.Table; tp(thisTimeRange{idxx}, :)];
+                                end
+                        end
+                        obj.Table = timetable2table(obj.Table);
+                    catch
+                    end
+                end
+                if exist('tpVariables', 'var')
+                    obj.Table = obj.Table(:, tpVariables);
+                end
+            elseif isempty(obj.TablePath) && ~isempty(SelectTableOptions)
+                try 
+                    obj.Table = selecttable(obj.Table, SelectTableOptions); 
+                    if isempty(obj.Table)
+                        error('No rows were selected. StatisticsAnalysis ceased.');
+                    end
+                catch ME
+                    error(ME.message);
+                end
             end
-            % Import Options Un-nest
-            obj = obj.ImportOptionsUnnest;
             % Tags Generation
-            if isempty(ips.Results.TagsGenerateOptions) && iscell(ips.Results.TagsGenerate)
-                TagsGenerateOptions = ips.Results.TagsGenerate;
+            if isempty(ips.Results.TagsGenerateOptions) && (isa(ips.Results.TagsGenerate, 'cell') || isa(ips.Results.TagsGenerate, 'struct') )
+                TagsGenerateOptions = OptionsSizeHelper(ips.Results.TagsGenerate);
             else
-                TagsGenerateOptions = ips.Results.TagsGenerateOptions;
+                TagsGenerateOptions = OptionsSizeHelper(ips.Results.TagsGenerateOptions);
                 TagsGenerate = ips.Results.TagsGenerate;
             end
             if ~isempty(TagsGenerateOptions)
@@ -164,9 +228,18 @@ classdef StatisticsAnalysis < handle
             elseif TagsGenerate
                 obj.Table = obj.TagsGenerate.addProp; 
             end
-            % Import Table if Not Generating Tags
+            % Table if Empty
             if isempty(obj.Table)
-                try obj.Table = obj.ImportTable; catch; end
+                error('Table Empty. Try obj.ImportTable. Remove strict SelectTableOptions.');
+            end
+        end
+        
+        function TT = TimeTable(obj)
+            % Try Converting to timetable
+            try 
+                TT = table2timetable(obj.Table); 
+            catch
+                error('Fail to convert to timetable.');
             end
         end
 
@@ -192,55 +265,6 @@ classdef StatisticsAnalysis < handle
     end
 
     methods(Access = private)
-        %% Select Table Before Import
-        % ---------------------------------------------------------------
-        function obj = DetectedImportOptionsUpdateFromSelectTable(obj, SelectTableOptions)
-            if ~isempty(SelectTableOptions) && ~isempty(obj.DetectedImportOptions)
-                obj.DetectedImportOptions.SelectedVariableNames = SelectTableOptions(:,1)';
-                tempTable = readtable(obj.TablePath, obj.DetectedImportOptions);
-                [~, ~, FirstLast] = selecttable(tempTable, SelectTableOptions); 
-                try FirstLast = cellfun(@(x) x + obj.originalDetectedImportOptions.VariableNamesLine, FirstLast, 'UniformOutput', false); catch; end
-                DataLinesOptions = {'DataLines', {FirstLast}};
-                if isempty(obj.ImportOptions), obj.ImportOptions = struct('DataLines', {FirstLast});
-                else
-                    if isa(obj.ImportOptions, 'cell')
-                        DataLinesMapInImportOptions = strcmp(obj.ImportOptions(:,1), 'DataLines');
-                        tf = ~any(DataLinesMapInImportOptions);
-                        if tf, obj.ImportOptions = [obj.ImportOptions; DataLinesOptions]; 
-                        else
-                            RowNum = find(DataLinesMapInImportOptions, 1); 
-                            OldDataLinesOptions = obj.ImportOptions(RowNum, 2);
-                            NewFL = UpdateDataLinesOptionsHelper(OldDataLinesOptions, FirstLast);
-                            obj.ImportOptions(RowNum, :) = {'DataLines', {NewFL}};
-                        end
-                    elseif isa(obj.ImportOptions, 'struct')
-                        if ~isfield(obj.ImportOptions, 'DataLines')
-                            obj.ImportOptions.DataLinesOptions = {FirstLast}; 
-                        else
-                            obj.ImportOptions.DataLines = UpdateDataLinesOptionsHelper(obj.ImportOptions.DataLines, FirstLast);
-                        end
-                    else
-                        error('Input ImportOptions should be cell or struct.')
-                    end
-                end
-            end
-            function NewFL = UpdateDataLinesOptionsHelper(Old, FL) % Old is a 1x1 cell with [n1 n2] 1x2 int matrix.
-                [LB, RB] = IntervalTypeName2BoundaryTypes('closed'); 
-                NewFL = cell(size(FL)); od = arange(); 
-                od.range = {Old{1}(1), Old{1}(2)}; od.lb = LB; od.rb = RB; od.nar = false; 
-                tp = arange(); tp.lb = LB; tp.rb = RB; tp.nar = false;
-                for idx = 1: numel(FL), tp.range = {FL{idx}(1), FL{idx}(2)};
-                    [~, btm, top] = intersect1D(tp, od, true); 
-                    if ~isempty(btm) && ~isempty(top), NewFL{idx} = [btm, top]; else, error('No Rows Selected.'); end
-                end
-                % ar = arange(FL).intervalTypeUpdate('closed'); oldar = arange(Old).intervalTypeUpdate('closed'); newar = intersect(oldar, ar);
-                % NewFL = {}; for indx = 1: 1: numel(newar), if ~isempty(newar(indx)), NewFL = [NewFL, {[newar(indx).bottom, newar(indx).top]}]; end; end
-                % New = {'DataLines', {NewFL}};
-            end
-        end
-    
-         %% Import Options
-         % ---------------------------------------------------------------
         function obj = ImportOptionsUnnest(obj)
             % ImportOptionsUnnest un-nests the ImportOptions.
             %   
@@ -297,6 +321,7 @@ classdef StatisticsAnalysis < handle
             %   Inside usage. Invoked by <a href = "matlab:help DetectImport">DetectImport</a> and <a href = "matlab:help ImportTable">ImportTable</a>.
 
             %   WANG Yi-yang 28-Apr-2022
+            
             if (nargin == 1), idx = 0; end
             fn1 = fieldnames(obj.ImportOptions{1}); 
             for idx1 = 1: length(fn1)
@@ -313,6 +338,7 @@ classdef StatisticsAnalysis < handle
                 switch fn
                     case 'VariableTypes'
                         if isa(val, 'cell')
+                            val = OptionsSizeHelper(val);
                             obj = IOUHelper(obj, fn, cell2struct(val(:,2), val(:,1), 1));
                         elseif isa(val, 'struct')
                             fnl = fieldnames(val);
@@ -325,9 +351,45 @@ classdef StatisticsAnalysis < handle
                                 end
                             end
                         end
+                    case {'Name', 'FillValue', 'TreatAsMissing', 'EmptyFieldRule', 'QuateRule', 'Prefixes', 'Suffixes'}
+                        if isa(val, 'cell')
+                            val = OptionsSizeHelper(val);
+                            obj = IOUHelper(obj, fn, cell2struct(val(:,2), val(:,1), 1));
+                        elseif isa(val, 'struct')
+                            fnl = fieldnames(val);
+                            for idxx = 1: length(fnl)
+                                map = strcmp(obj.DetectedImportOptions.VariableNames, fnl{idxx});
+                                if any(map)
+                                    obj.DetectedImportOptions = setvaropts(obj.DetectedImportOptions, fnl{idxx}, fn, val.(fnl{idxx}));
+                                else
+                                    error(['VariableNames to be altered not found.', fnl{idxx} ]);
+                                end
+                            end
+                        end
                     otherwise
                         obj.DetectedImportOptions.(fn) = val;
                 end
+            end
+        end
+    end
+end
+
+% Helpers
+function Options = OptionsSizeHelper(Options, numOneLine)
+    if nargin == 1, numOneLine = 2; end
+    if ~isempty(Options)
+        sz = size(Options);
+        if isa(Options, 'cell') && sz(1) == 1
+            if sz(2) == numOneLine
+                % do nothing
+            elseif mod(sz(2), numOneLine) == 0
+                tp = cell(sz(2)/numOneLine, numOneLine);
+                for idx = 1: sz(2)/numOneLine
+                    tp(idx, :) = Options(1, numOneLine*(idx-1)+1: numOneLine*idx);
+                end
+                Options = tp;
+            else
+                error('Check Input. Length not match.');
             end
         end
     end

@@ -38,14 +38,13 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
         case 'IA'
             [list, IncrementWhere, AdditionWhere, len] = IncrementAdditionListGenerateHelper(T, VariableNames);
             [T, tplist] = IncrementAdditionRemoveLastLinesHelper(T, list, len);
-            [T, tplist] = IncrementAdditionFirstRowHelper(T, tplist, IncrementWhere, AdditionWhere, VariableNames);
+            [T, tplist] = IncrementAdditionFirstRowHelper(T, tplist, IncrementWhere, AdditionWhere, VariableNames, ips.Results.ConstantValues);
             tplistgroup = IncrementAdditionListGroupHelper(tplist);
         case {'I', 'C'}
             list = struct;
-            SA = StatisticsAnalysis('Table', T).TagsGenerate('QuickStyle', {'MissingMap'});
             for idx = 1: length(VariableNames)
                 thisWhere = strcmp(T.Properties.VariableNames, VariableNames(idx));
-                thisMissingMap = SA.Table.Properties.CustomProperties.MissingMap{thisWhere};
+                thisMissingMap = ismissing(T(:,thisWhere));
                 [list(:).(VariableNames{idx})] = deal(FirstLastFindTrue(thisMissingMap));
             end
     end
@@ -63,9 +62,8 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
         Addition = VariableNames(end);
         IncrementWhere = strcmp(T.Properties.VariableNames, Increment);
         AdditionWhere = strcmp(T.Properties.VariableNames, Addition);
-        thisSA = StatisticsAnalysis('Table', T).TagsGenerate('QuickStyle', {'MissingMap'});
-        IncrementMissingMap = thisSA.Table.Properties.CustomProperties.MissingMap{IncrementWhere};
-        AdditionMissingMap = thisSA.Table.Properties.CustomProperties.MissingMap{AdditionWhere};
+        IncrementMissingMap = ismissing(T(:,IncrementWhere));
+        AdditionMissingMap = ismissing(T(:,AdditionWhere));
         len = length(IncrementMissingMap);
         list = struct.empty;
         for idxx = 1: length(IncrementMissingMap)
@@ -157,8 +155,7 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
         end
     end
     
-    function [T, list] = IncrementAdditionFirstRowHelper(T, list, IncrementWhere, AdditionWhere, VariableNames)
-        RemoveFlag = false;
+    function [T, list] = IncrementAdditionFirstRowHelper(T, list, IncrementWhere, AdditionWhere, VariableNames, ConstantValues)
         if isempty(list), return; end
         if ~isempty(list(1).TopLines) && (list(1).TopLines(1) == 1)
             switch list(1).Top
@@ -206,14 +203,23 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
             end
         elseif isempty(list(1).TopLines) && ~isempty(list(1).MiddleLines) && (list(1).MiddleLines(1) == 1)
             RemoveLines = list(1).MiddleLines;
-            switch list(1).Bottom
-                case 'o', list(1) = [];
-                case {'r', 'l'}
-                    list(1).MiddleLines = [];
-                    list(1).Top = list(1).Bottom; list(1).TopLines = list(1).BottomLines;
+            if any(strcmp(list(1).Bottom, {'r', 'l'}))
+                list(1).MiddleLines = [];
+                list(1).Top = list(1).Bottom; list(1).TopLines = list(1).BottomLines;
             end
-            T(RemoveLines(1):RemoveLines(end),:) = [];
-            warning('Increment-Addition. First lines were missing, thus removed.')
+            if ~isempty(ConstantValues) && numel(ConstantValues) <= 2
+                if numel(ConstantValues) == 1
+                    ConstantValues = [ConstantValues, ConstantValues];
+                end
+                for idxx = RemoveLines(1): RemoveLines(end)
+                    T(idxx,IncrementWhere|AdditionWhere) = {ConstantValues(1), ConstantValues(2)};
+                end
+                warning('Increment-Addition. First lines were missing, thus filled with given ConstantValues.')
+            else
+                if ~isempty(ConstantValues), warning('Too many ConstantValues'); end
+                T(RemoveLines(1):RemoveLines(end),:) = [];
+                warning('Increment-Addition. First lines were missing, thus removed.')
+            end
             list = IncrementAdditionListGenerateHelper(T, VariableNames);
             [T, list] = IncrementAdditionFirstRowHelper(T, list, IncrementWhere, AdditionWhere);
         end
@@ -222,7 +228,7 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
     function listGroup = IncrementAdditionListGroupHelper(list)
         listGroup = struct.empty;
         for idxx = 1: length(list)
-            if ~isempty(listGroup) && arange(listGroup(end).GroupLines, 'closed').ni(idxx)
+            if ~isempty(listGroup) && listGroup(end).GroupLines(1) <= idxx && idxx <= listGroup(end).GroupLines(end)
                 % do nothing
             else
                 thislistGroup = struct;

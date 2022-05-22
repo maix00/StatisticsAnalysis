@@ -680,9 +680,9 @@ classdef arange
                             tr = timerange(tp.range{1}, tp.range{2}, UnitConvertUtility(tp.unit)); 
                             if any(strcmp(strcat(obj.lb.li, obj.rb.ri),{'[]','()','(]'})), warning('IntervalType change to openright.'); end
                         end
-                        if isempty(tr)
+                        if ~exist('tr', 'var') || isempty(tr)
                             try
-                                tp = obj.valuefunc(DurationFormat2FuncUtility(obj.unit));
+                                if ~isa(obj.range{1}, 'duration'), tp = obj.valuefunc(DurationFormat2FuncUtility(obj.unit)); else, tp = obj; end
                                 if ~isa(tp.range{1}, 'duration'), error('Try value converting to duration failed.');
                                 else, try tr = timerange(tp.range{1}, tp.range{2}, tp.type); catch, error('Ambiguous interval type.'); end; end
                             catch ME, error(ME.message);

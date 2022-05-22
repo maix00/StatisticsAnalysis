@@ -18,6 +18,9 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     ips.addParameter('QuickStyle', [], @(x)true); % Value be the CustomTagNames to be analysed
     ips.parse(thisFieldName, varargin{:})
 
+    CustomTagName = OptionsSizeHelper(ips.Results.CustomTagName);
+    CustomTagFunction = OptionsSizeHelper(ips.Results.CustomTagFunction, 3);
+
     % Preservation
     formerTagsFlag = false;
     if ~isempty(obj.Table)
@@ -69,7 +72,7 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
         'continuous', 'Mode', @(x,y)tsnanmode(double(string(y{:,1})));
         'continuous', 'Variance', @(x,y)tsnanvar(double(string(y{:,1})))
         };
-    CustomTagFunction = [DefaultTagFunction; ips.Results.CustomTagFunction];
+    CustomTagFunction = [DefaultTagFunction; CustomTagFunction];
 
     % Import Table
     if isempty(obj.Table) || (~isempty(obj.Table) && ~any(strcmp(obj.Table.Properties.VariableNames, thisFieldName)))
@@ -106,49 +109,57 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
     tuple_count = size(thisColumnTable, 1);
     
     % Tag Names
+    NameCell = {'continuous', 'logical', 'unique', 'categorical', 'discrete', 'invariant'};
     if ~formerTagsFlag
         if (ips.Results.TagContinuity == 1) 
-            thisTagName = 'continuous';
+            thisTagName = {'continuous'};
         elseif (ips.Results.TagCategory == 1)
-            thisTagName = 'categorical';
-        elseif unique_count == 2
-            thisTagName = 'logical';
-        elseif unique_count == tuple_count
-            thisTagName = 'unique';
-        elseif unique_count == 1
-            thisTagName = 'invariant';
+            thisTagName = {'categorical'};
         else
-            thisTagName = 'discrete';
+            switch unique_count
+                case 2, thisTagName = {'logical'};
+                case tuple_count, thisTagName = {'unique'};
+                case 1, thisTagName = {'invariant'};
+                otherwise, thisTagName = {'discrete'};
+            end
         end
     else
-        NameCell = {'continuous', 'logical', 'unique', 'categorical', 'discrete', 'invariant'};
-        for indx = 1: 1: size(NameCell, 2)
+        for indx = 1: 6
             if any(strcmp(formerTagNames, NameCell{indx}))
-                thisTagName = NameCell{indx};
+                thisTagName = NameCell(indx);
+                break
             end
         end
+        formerTagNames(strcmp(formerTagNames, NameCell{indx})) = [];
     end
     % Custom Tag Names
-    if ~isempty(ips.Results.CustomTagName)
-        CustomTagName = ips.Results.CustomTagName;
-        if any(cell2mat(CustomTagName(:,2)))
-            thisTagName = {thisTagName};
-            for indx = 1: 1: size(CustomTagName,1)
-                if CustomTagName{indx,2} == 1
-                    thisTagName = [thisTagName; CustomTagName(indx,1)];
+    if ~isempty(CustomTagName)
+        OnTagName = CustomTagName(logical(cell2mat(CustomTagName(:,2))),1);
+        if ~isempty(OnTagName)
+            for indx = 1: 6
+                if any(strcmp(OnTagName, NameCell{indx}))
+                    thisTagName = NameCell(indx);
                 end
             end
+            thisTagName = unique([thisTagName; OnTagName]);
         end
-    end
-    if ~iscell(thisTagName)
-        thisTagName = {thisTagName};
-    end
-    if formerTagsFlag
-        for indx = 1: 1: length(formerTagNames)
-            if ~all(strcmp(thisTagName, formerTagNames{indx}))
-                thisTagName = [thisTagName; formerTagNames(indx)];
+        OffTagName = CustomTagName(~logical(cell2mat(CustomTagName(:,2))),1);
+        if ~isempty(OffTagName)
+            for idxx = 1: numel(OffTagName)
+                map = strcmp(thisTagName, OffTagName{idxx});
+                if any(map), thisTagName(map) = []; end
             end
         end
+    end
+    if (ips.Results.TagContinuity == 0)
+        map = strcmp(thisTagName, 'continuous');
+        if any(map), thisTagName(map) = {'discrete'}; end
+    elseif (ips.Results.TagCategory == 0)
+        map = strcmp(thisTagName, 'category');
+        if any(map), thisTagName(map) = {'discrete'}; end
+    end
+    if formerTagsFlag
+        thisTagName = unique([thisTagName; formerTagNames]);
     end
     thisTag = {thisTagName}; thisTagHelper = {'TagNames'};
 
@@ -216,5 +227,24 @@ function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName,
             end
         end
     end
-
+    
+    function Options = OptionsSizeHelper(Options, numOneLine)
+        if nargin == 1, numOneLine = 2; end
+        if ~isempty(Options)
+            sz = size(Options);
+            if isa(Options, 'cell') && sz(1) == 1
+                if sz(2) == numOneLine
+                    % do nothing
+                elseif mod(sz(2), numOneLine) == 0
+                    tp = cell(sz(2)/numOneLine, numOneLine);
+                    for idx = 1: sz(2)/numOneLine
+                        tp(idx, :) = Options(1, numOneLine*(idx-1)+1: numOneLine*idx);
+                    end
+                    Options = tp;
+                else
+                    error('Check Input. Length not match.');
+                end
+            end
+        end
+    end
 end
