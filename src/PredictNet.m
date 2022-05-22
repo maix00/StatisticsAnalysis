@@ -1,20 +1,20 @@
 function net = PredictNet(XtrainSeq, YtrainSeq)
-numFeatures = 12;
+numFeatures = 16;
 numResponses = 1;
-numHiddenUnits = 300;
+numHiddenUnits = 1000;
 
 layers = [...
     sequenceInputLayer(numFeatures)
-    lstmLayer(numHiddenUnits)
+    fullyConnectedLayer(4)
     eluLayer
-    fullyConnectedLayer(numResponses)
     lstmLayer(numHiddenUnits)
     reluLayer
+    fullyConnectedLayer(100)
     fullyConnectedLayer(numResponses)
     regressionLayer];
 
 options = trainingOptions('adam', ...
-    'MaxEpochs',250, ...
+    'MaxEpochs',500, ...
     'GradientThreshold',1, ...
     'InitialLearnRate',0.001, ...
     'LearnRateSchedule','piecewise', ...
