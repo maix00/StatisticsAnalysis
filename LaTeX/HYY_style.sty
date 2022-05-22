@@ -1,0 +1,188 @@
+\NeedsTeXFormat{LaTeX2e}%mmwv20220307
+\ProvidesPackage{HYY_style}
+
+
+\RequirePackage{siunitx}%国际单位（si）
+\RequirePackage{changepage}%局部调整页边等（adjustwidth）
+\RequirePackage{verbatim}%多行注释等（comment）
+\RequirePackage{setspace}%局部调整行间距（spacing）
+\RequirePackage{amsmath,amsfonts,amssymb,amsthm,bm,extarrows,mathrsfs,dutchcal}%数学输入
+\RequirePackage{balance}%双栏文本的平衡
+%\balance
+%\RequirePackage{flushend}%双栏文本的平衡
+
+\RequirePackage{ctex}%中文支持
+\RequirePackage{geometry}%页面布局
+	\geometry{top=25mm,bottom=25mm,left=25mm,right=25mm}%页面布局
+	\setlength\parindent{2em}% 每行缩进两个汉字
+	\setmainfont{Times New Roman}% 设置字体
+	%\setmonofont{Courier New}
+	\setsansfont{Arial}
+	\setCJKfamilyfont{kai}[AutoFakeBold]{simkai.ttf}
+	\newcommand*{\kai}{\CJKfamily{kai}}
+	\setCJKfamilyfont{song}[AutoFakeBold]{SimSun}
+	\newcommand*{\song}{\CJKfamily{song}}
+\RequirePackage{xcolor}%颜色
+\RequirePackage{graphicx}%图片
+\RequirePackage{float}%图片浮动
+\RequirePackage{array}%表格
+\RequirePackage{longtable}%长表格
+\RequirePackage{booktabs,tabularx}%表格顶线等
+\RequirePackage{multirow}%表格内部跨行
+\RequirePackage{bigstrut}%表格间隔调整
+\RequirePackage{bigdelim}%跨行表格的定界符
+\RequirePackage{cprotect}%脆落命令保护
+\RequirePackage{listings}%代码环境
+\RequirePackage{url}%链接
+\RequirePackage{subcaption}%子标题
+\RequirePackage[titles]{tocloft}
+\RequirePackage{indentfirst}%首行缩进
+\RequirePackage{caption}%设置浮动体的标题
+\RequirePackage{enumitem}%定制列表环境
+\RequirePackage{ulem}%下划线
+\RequirePackage{calc}%尺寸计算
+\RequirePackage[titletoc,title]{appendix}%附录
+\RequirePackage{etoolbox}
+\AtBeginEnvironment{thebibliography}{%
+    \phantomsection
+    \addcontentsline{toc}{section}{\refname}
+    }
+\RequirePackage{hyperref}%超链接
+	\hypersetup{%
+		%         xetex,
+		% unicode=false, % hyperref 和 xetex 同时使用时不能开启 Unicode 选项.
+         pdfstartview=FitH,
+         CJKbookmarks=true,
+         bookmarksnumbered=true,
+         bookmarksopen=true,
+         colorlinks, %注释掉此项则交叉引用为彩色边框(将colorlinks和pdfborder同时注释掉)
+         pdfborder=001,   %注释掉此项则交叉引用为彩色边框
+		 allcolors=black,
+		 breaklinks=true}%
+\RequirePackage{cleveref}%交叉引用
+
+
+
+%%特别字符
+%数学字符
+%\newcommand{\dd}{\mathrm{d}}
+\newcommand{\nega}[1]{#1^{-1}}
+\newcommand{\zgroup}[2]{\left<#1,#2\right>}
+\newcommand{\zring}[3]{\left<#1,#2,#3\right>}
+\newcommand{\coss}[1]{\text{C}_{#1}}%大写余弦
+\newcommand{\sinn}[1]{\text{S}_{#1}}%大写正弦
+\newcommand{\tann}[1]{\text{T}_{#1}}%大写正切
+\newcommand{\tr}{\text{tr}}%方阵的迹
+\newcommand{\rank}{\text{rank}}
+\newcommand{\rkk}{\text{r}}
+\newcommand{\rk}[1]{\text{r}\left(#1\right)}
+\newcommand{\diag}{\text{diag}}%对角阵
+\newcommand{\diagg}[1]{\text{diag}\{{#1}\}}%对角阵
+\newcommand{\image}{\text{Im}}
+\newcommand{\kernal}{\text{Ker}}
+\newcommand{\mathstring}[2]{{#1}_1,{#1}_2,\cdots,{#1}_{#2}}
+\newcommand{\mathstringside}[3]{{#1}_{{#2}1},{#1}_{{#2}2},\cdots,{#1}_{{#2}{#3}}}
+\newcommand{\mathstringextrainside}[4]{{#1}_{{#2}\,{#3}_1},{#1}_{{#2}\,{#3}_2},\cdots,{#1}_{{#2}\,{#3}_{#4}}}
+\newcommand{\mathstringdrop}[3]{{#1}_{1}{#3}{#1}_{2}{#3}\cdots{#3}{#1}_{#2}}
+\newcommand{\mathstringextra}[3]{{#1}_{{#2}_1},{#1}_{{#2}_2},\cdots,{#1}_{{#2}_{#3}}}
+\newcommand{\zfc}[3]{\left[^{#1_{#2}}#3\right]}
+\newcommand{\lbd}{\lambda}
+\newcommand{\mtalpha}{\bm{\alpha}}%向量阿尔法
+\newcommand{\mtalf}{\bm{\alpha}}%向量阿尔法
+\newcommand{\mtalphastring}[1]{\mathstring{\mtalpha}{#1}}
+\newcommand{\mtalphastringextra}[2]{\mathstringextra{\mtalpha}{#1}{#2}}
+\newcommand{\mtbeta}{\bm{\beta}}%向量贝塔
+\newcommand{\mtbetastring}[1]{\mathstring{\mtbeta}{#1}}
+\newcommand{\mtbetastringextra}[2]{\mathstringextra{\mtbeta}{#1}{#2}}
+\newcommand{\mtvarphi}{\bm{\varphi}}
+\newcommand{\mtvf}{\bm{\varphi}}
+\newcommand{\mtvarphid}[1]{\mtvarphi_{\text{\tiny #1}}}
+\newcommand{\mttheta}{\bm{\theta}}
+\newcommand{\mtpsi}{\bm{\psi}}
+\newcommand{\mtksi}{\bm{\xi}}
+\newcommand{\mtz}{\bm{0}}
+\newcommand{\bmstring}[2]{\mathstring{\bm{#1}}{#2}}
+\newcommand{\bmstringextra}[3]{\mathstringextra{\bm{#1}}{#2}{#3}}
+%定义粗斜体字体以在数学模式下使用，但内部出现特殊数学记号仍需要重新叠加一次数学模式.
+\def\mbi#1{\bm{#1}}%{\textbf{\textsl{#1}}}%math_bold_italic
+\renewcommand{\pmb}[1]{\bm{#1}}
+\newcommand{\mbistring}[2]{\mathstring{\mbi{#1}}{#2}}
+\newcommand{\mbistringextra}[3]{\mathstringextra{\mbi{#1}}{#2}{#3}}
+\newcommand{\mta}{\mbi{A}}
+\newcommand{\mtb}{\mbi{B}}
+\newcommand{\mtc}{\mbi{C}}
+\newcommand{\mtd}{\mbi{D}}
+\newcommand{\mtav}{|\mbi{A}|}
+\newcommand{\mtbv}{|\mbi{B}|}
+\newcommand{\mtcv}{|\mbi{C}|}
+\newcommand{\mtdv}{|\mbi{D}|}
+\newcommand{\zvx}{\mbi{x}}%向量化x即{\vec{x}}z-vector-x
+\newcommand{\mtx}{\boldsymbol{x}}
+\newcommand{\mti}{\mbi{I}}
+\newcommand{\mtp}{\mbi{P}}
+\newcommand{\mtq}{\mbi{Q}}
+\newcommand{\mto}{\mbi{O}}
+\newcommand{\mtau}[1]{\mbi{A}^{#1}}
+\newcommand{\mtad}[1]{\mbi{A}_{#1}}
+\newcommand{\mtbu}[1]{\mbi{B}^{#1}}
+\newcommand{\mtcu}[1]{\mbi{C}^{#1}}
+\newcommand{\mtdu}[1]{\mbi{D}^{#1}}
+\newcommand{\mtiu}[1]{\mbi{I}^{#1}}
+\newcommand{\mtid}[1]{\mbi{I}_{#1}}
+\newcommand{\mted}[1]{\mbi{e}_{#1}}
+\newcommand{\mteed}[1]{\mbi{E}_{#1}}
+\newcommand{\mtfd}[1]{\mbi{f}_{#1}}
+\newcommand{\mtgd}[1]{\mbi{g}_{#1}}
+\newcommand{\mtId}{\mbi{Id}}
+\newcommand{\mtIdd}[1]{\mbi{Id}_{#1}}
+\newcommand{\mtax}{\mta^{*}}
+\newcommand{\mtbx}{\mtb^{*}}
+%其他含中文输入
+%定义矩阵阶数
+\def\jzjs#1#2{#1\times #2}	%特别情况下可以启用\def\zjzjs#1#2{#1\times #2}
+\newcommand{\zks}{\begin}%开始
+\newcommand{\zjs}{\end}%结束
+\newcommand{\zkshls}{\begin{vmatrix}}%开始行列式
+\newcommand{\zjshls}{\end{vmatrix}}%结束行列式
+\newcommand{\zksjz}{\begin{pmatrix}}%开始矩阵
+\newcommand{\zjsjz}{\end{pmatrix}}%结束矩阵
+\newcommand{\zkslb}{\begin{enumerate}}%开始列表
+\newcommand{\zjslb}{\end{enumerate}}%结束列表
+\newcommand{\zt}{\item }%列表环境下的条
+\newcommand{\zerweifenkuaijuzhen}[4]{\zksjz {#1}&{#2}\\ {#3}&{#4} \zjsjz}%二维分块矩阵
+\newcommand{\mbq}{\mathbb{Q}}%有理数集
+\newcommand{\mbr}{\mathbb{R}}%实数集
+\newcommand{\mbf}{$\mathbb{F}$}
+\newcommand{\mbk}{$\mathbb{K}$}
+\newcommand{\zkj}{\varnothing}%空集
+\newcommand{\zbl}{\widetilde}%波浪
+\newcommand{\zjdz}[1]{\left|{#1}\right|}%绝对值
+\newcommand{\zfkh}[1]{\left[{#1}\right]}%方括号
+\newcommand{\zkh}[1]{\hspace{0em}$($\hspace{0em}#1\hspace{0em}$)$\hspace{0em}}
+\newcommand{\zwfkh}[1]{\hspace{0em}$[$\hspace{0em}#1\hspace{0em}$]$\hspace{0em}}
+\newcommand{\zxydy}{\leqslant}%小于等于
+\newcommand{\zdydy}{\geqslant}%大于等于
+\newcommand{\rt}{\rightarrow}%函数决定
+\newcommand{\Rtr}{\Rightarrow}%蕴含
+\newcommand{\xC}{\times}%乘法叉乘
+\newcommand{\xxc}{\times}%乘法叉乘
+\newcommand{\xD}{\cdot}%乘法点乘
+\newcommand{\xxd}{\cdot}%乘法点乘
+\newcommand{\zh}{\cdots}%横着的省略号
+\newcommand{\zs}{\vdots}%竖着的省略号
+\newcommand{\vdtwo}{\vdots&\vdots}
+\newcommand{\vdthr}{\vdots&\vdots&\vdots}
+\newcommand{\vdfou}{\vdots&\vdots&\vdots&\vdots}
+\newcommand{\zx}{\ddots}%斜着的省略号
+\newcommand{\zand}{\bigwedge}%且
+%向量化的数学符号
+\newcommand{\zva}{\mathbf{a}}%{\vec{a}}
+\newcommand{\zvb}{\mathbf{b}}%{\vec{b}}
+\newcommand{\zvc}{\mathbf{c}}%{\vec{c}}
+\newcommand{\zvd}{\mathbf{d}}%{\vec{d}}
+\newcommand{\zve}{\mathbf{e}}
+\newcommand{\zvi}{\mathbf{i}}
+\newcommand{\zvj}{\mathbf{j}}
+\newcommand{\zvk}{\mathbf{k}}
+\newcommand{\zxl}[1]{\overrightarrow{{#1}}}%向量
+\renewcommand{\vec}[1]{\overrightarrow{{#1}}}

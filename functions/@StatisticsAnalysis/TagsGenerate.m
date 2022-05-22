@@ -37,6 +37,9 @@ function obj = TagsGenerate(obj, varargin)
     ips.addParameter('OutputClass', 'table', @(x)validateattributes(x, {'char', 'string'}, {}));
     ips.addParameter('QuickStyle', [], @(x)true);
     ips.parse(varargin{:})
+    
+    CustomTagName = OptionsSizeHelper(ips.Results.CustomTagName);
+    CustomTagFunction = OptionsSizeHelper(ips.Results.CustomTagFunction, 3);
 
     % Import Table 
     if isempty(obj.Table)
@@ -49,30 +52,28 @@ function obj = TagsGenerate(obj, varargin)
         obj.OneTagFlag = false;
         % TagContinuity
         if isempty(ips.Results.TagContinuity)
-            TagContinuity = arrayfun(@(x) 0, 1:variable_count);
+            TagContinuity = arrayfun(@(x) NaN, 1:variable_count);
         else
             TagContinuity = ips.Results.TagContinuity;
         end
         % TagCategory
         if isempty(ips.Results.TagCategory)
-            TagCategory = arrayfun(@(x) 0, 1:variable_count);
+            TagCategory = arrayfun(@(x) NaN, 1:variable_count);
         else
             TagCategory = ips.Results.TagCategory;
         end
         % CustomTagName
         thisCustomTagName = {};
-        if ~isempty(ips.Results.CustomTagName)
-            CustomTagName = ips.Results.CustomTagName;
+        if ~isempty(CustomTagName)
             for subidx = 1: size(CustomTagName, 1)
                 thisCustomTagName = [thisCustomTagName; {CustomTagName{subidx,1}, CustomTagName{subidx,2}(idx)}];
             end
         end
         % CustomTagFunction
-        thisCustomTagFunction = ips.Results.CustomTagFunction;
-        for subidx = 1: size(thisCustomTagFunction, 1)
-            if isnumeric(thisCustomTagFunction{subidx})
-                if thisCustomTagFunction{subidx}(idx)
-                    thisCustomTagFunction{subidx} = 'table';
+        for subidx = 1: size(CustomTagFunction, 1)
+            if isnumeric(CustomTagFunction{subidx})
+                if CustomTagFunction{subidx}(idx)
+                    CustomTagFunction{subidx} = 'table';
                 end
             end
         end
@@ -81,7 +82,7 @@ function obj = TagsGenerate(obj, varargin)
             'TagContinuity', TagContinuity(idx), ...
             'TagCategory', TagCategory(idx), ...
             'CustomTagName', thisCustomTagName, ...
-            'CustomTagFunction', thisCustomTagFunction, ...
+            'CustomTagFunction', CustomTagFunction, ...
             'QuickStyle', ips.Results.QuickStyle ...
             );
         % Clear obj.Tags
@@ -110,4 +111,25 @@ function obj = TagsGenerate(obj, varargin)
     end
     % Add Properties
     obj.Table = obj.addProp;
+
+    % Helper
+    function Options = OptionsSizeHelper(Options, numOneLine)
+        if nargin == 1, numOneLine = 2; end
+        if ~isempty(Options)
+            sz = size(Options);
+            if isa(Options, 'cell') && sz(1) == 1
+                if sz(2) == numOneLine
+                    % do nothing
+                elseif mod(sz(2), numOneLine) == 0
+                    tp = cell(sz(2)/numOneLine, numOneLine);
+                    for idxx = 1: sz(2)/numOneLine
+                        tp(idxx, :) = Options(1, numOneLine*(idxx-1)+1: numOneLine*idxx);
+                    end
+                    Options = tp;
+                else
+                    error('Check Input. Length not match.');
+                end
+            end
+        end
+    end
 end

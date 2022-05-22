@@ -1,10 +1,12 @@
-function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
+function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest, QuickStyle)
     % selecttable selects tuples of table from request
     %   Input [table, {FieldName: char/string, Value: numeric/char/string/arange/cell; other_requests}]
 
     %   WANG Yi-yang 28-Apr-2022
     %   v20220430
 
+    if nargin == 2, QuickStyle = false; end
+    cmpFL = {[]};
     RequestSize = size(theRequest, 1);
     if RequestSize > 1
         for index = 1: 1: RequestSize
@@ -14,7 +16,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
             else
                 lastcmp(lastcmp) = thiscmp;
             end
-            if index == RequestSize
+            if index == RequestSize && ~QuickStyle
                 cmpFL = FirstLastFindTrue(lastcmp);
             end
         end
@@ -27,10 +29,9 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
             if any(size(thisTable) == 0)
                 beep; warning('No matching tuples.');
             end
-            cmpFL = FirstLastFindTrue(cmp);
+            if ~QuickStyle, cmpFL = FirstLastFindTrue(cmp); end
         catch
             cmp = arrayfun(@(x) 1, 1:size(thisTable, 1));
-            cmpFL = {[]};
             beep; warning('Input Error Warning. Input [table, {FieldName: char/string, Value: numeric/char/string/arange/cell; other_requests}].');
         end
     else
@@ -53,17 +54,22 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest)
     
     function Return = cmp_generation(thisTable, thisField, thisValue)
         switch class(thisValue)
-            case {'char', 'string'}
+            case 'char'
                 Return = strcmp(thisTable.(thisField), thisValue);
+            case 'string'
+                Return = false(size(thisTable.(thisField)));
+                for indx = 1: 1: numel(thisValue)
+                    Return = Return | strcmp(thisTable.(thisField), thisValue(indx));
+                end
             case 'datetime'
                 Return = arange(thisValue, thisValue).ni(thisTable.(thisField));
             case 'timerange'
                 thisValue = arange(thisValue);
                 Return = thisValue.ni(thisTable.(thisField));
             case 'arange'
-                Return = thisValue.ni(thisTable.(thisField));
+                Return = any(thisValue.ni(thisTable.(thisField)));
             case 'cell'
-                Return = zeros(size(thisTable.(thisField)));
+                Return = false(size(thisTable.(thisField)));
                 for indx = 1: 1: numel(thisValue)
                     Return = Return | cmp_generation(thisTable, thisField, thisValue{indx});
                 end
