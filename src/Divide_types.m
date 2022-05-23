@@ -1,3 +1,4 @@
+function [country_type,properties] = Divide_types()
 % Load Data and Dealing with missing values
 clc; clear;
 format long
@@ -30,14 +31,24 @@ end
 data = table2array(data(:,3:end));
 countries = table2array(countries);
 
+for col = 1:size(data,2)
+    data(:,col) = (data(:,col)-mean(data(:,col)))/std(data(:,col));
+end
+
 % PCA, picking the first five characters 
 coeff = pca(data);
 
 char = data*coeff;
-char_cut = char(:,5);
+char_cut = char(:,1);
 num_types = 5;
 idx = kmeans(char_cut,num_types);
 histogram(idx);
+
+properties = cell(size(char,1),2);
+for ii = 1:size(char,1)
+    properties{ii,1} = countries{ii,1};
+    properties{ii,2} = char_cut(ii,:);
+end
 
 country_type = cell(num_types,1);
 for ii = 1:size(idx,1)
@@ -46,3 +57,5 @@ for ii = 1:size(idx,1)
         country_type{type,1} = [country_type{type,1}, countries(ii,1)];
     end
 end
+end
+

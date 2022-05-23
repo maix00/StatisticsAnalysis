@@ -2,16 +2,9 @@
 clear;clc
 format long
 
-XSeq_all = [];
-YSeq_all = [];
-
-% Load Data
-
-
+% Some preparation
 path = './data/COVID19/country.csv';
-properties = StatisticsAnalysis( ...
-    'TablePath', path...
-    ).Table;
+[country_types, properties] = Divide_types();
 countries = StatisticsAnalysis( ...
     'TablePath', path, ...
     'ImportOptions', { ...
@@ -19,7 +12,11 @@ countries = StatisticsAnalysis( ...
     }...
     ).Table;
 
-for country_name = {'France','China','Australia'}
+%% Load Data: training set
+XSeq_train = [];
+YSeq_train = [];
+
+for country_name = {'France','Germany','Hungary','Japan'}
 
     % Load Data: pandemic data
     path_daily = './data/COVID19/daily_info.csv';
@@ -39,37 +36,15 @@ for country_name = {'France','China','Australia'}
         'Style', 'Increment-Addition', ...
         'InterpolationStyle', 'LinearRound'...
         );
-
-
-    properties = StatisticsAnalysis( ...
-        'TablePath', path...
-        ).Table;
-    countries = StatisticsAnalysis( ...
-        'TablePath', path, ...
-        'ImportOptions', { 'SelectedVariableNames', {'location'} }...
-        ).Table;
-    % Dealing with missing data
-    for col = 1:13
-        row = ismissing(properties(:,col));
-        properties(row,:) = [];
-        countries(row,:) = [];
-    end
-    properties = table2array(properties(:,3:end));
-    for col = 1:size(properties, 2)
-        sigP = std(properties(:, col));
-        muP = mean(properties(:, col));
-        properties(:,col) = (properties(:,col)-muP)/sigP;
-    end
-
     m = 0;
-    for row = 1:size(countries,1)
-        a = countries{row,1};
-        if strcmp(a{1,1},country_name)
+    for row = 1:size(properties,1)
+        name = properties{row,1};
+        if strcmp(name,country_name)
             m = row;
         end
     end
     % obtain relevant values
-    values = properties(m,:)';
+    values = properties{m,2}';
 
     % Settings and Training
     % Here using total_cases, values to predict new_cases
@@ -88,40 +63,95 @@ for country_name = {'France','China','Australia'}
     for ii = 1:(size(YSeq,2)-3)
         XSeq(2:5,ii) = YSeq(ii:ii+3)';
     end
-    XSeq_all = [XSeq_all,XSeq];
-    YSeq_all = [YSeq_all,YSeq];
+    XSeq_train = [XSeq_train,XSeq];
+    YSeq_train = [YSeq_train,YSeq];
 end
 
-muY = mean(YSeq_all);
-sigY = std(YSeq_all);
-YSeq_all = (YSeq_all - muY)/sigY;
+muY = mean(YSeq_train);
+sigY = std(YSeq_train);
+YSeq_train = (YSeq_train - muY)/sigY;
+XSeq_train(2:5,:) = (XSeq_train(2:5,:) - muY)/sigY;
+XSeq_train = XSeq_train(:,1:end-4);
+YSeq_train = YSeq_train(:,5:end);
+%% Load Data: testing set
+XSeq_test = [];
+YSeq_test = [];
 
-% Randomize
-r = randperm(size(XSeq_all,2));
-XSeq_all = XSeq_all(:,r);
-YSeq_all = YSeq_all(:,r);
-%%
-trainLength = floor(0.95*size(XSeq,2));
-XtrainSeq = XSeq_all(:,1:trainLength);
-YtrainSeq = YSeq_all(1,5:trainLength+4);
-XtestSeq = XSeq_all(:,trainLength+1:end-4);
-YtestSeq = YSeq_all(1,trainLength+5:end);
+for country_name = {'Sweden'}
 
-net = PredictNet(XtrainSeq,YtrainSeq);
+    % Load Data: pandemic data
+    path_daily = './data/COVID19/daily_info.csv';
+    data = StatisticsAnalysis( ...
+        'TablePath', path_daily, ...
+        'ImportOptions', { ...
+            'VariableTypes', {'new_vaccinations', 'double', 'total_vaccinations', 'double'}, ...
+            'SelectedVariableNames', {'date', 'new_cases', 'total_cases'} ...
+        }, ...
+        'SelectTableOptions', { ...
+            'location', country_name, ... Country
+            'date', arange(["2020-01-01", "2020-12-31"], 'closed') ...
+            } ...
+        ).Table;
+    data = tableMissingValuesHelper(data, ...
+        'VariableNames', {'new_cases', 'total_cases'}, ...
+        'Style', 'Increment-Addition', ...
+        'InterpolationStyle', 'LinearRound'...
+        );
+    m = 0;
+    for row = 1:size(properties,1)
+        name = properties{row,1};
+        if strcmp(name,country_name)
+            m = row;
+        end
+    end
+    % obtain relevant values
+    values = properties{m,2}';
+
+    % Settings and Training
+    % Here using total_cases, values to predict new_cases
+
+    YSeq = table2array(data(:,2))';
+    XSeq = zeros(5+size(values,1),size(YSeq,2));
+    for col = 1:size(YSeq,2)
+        XSeq(6:end, col) = values;
+    end
+
+    total_cases = table2array(data(:,3))';
+    muX = mean(total_cases);
+    sigX = std(total_cases);
+    total_cases = (total_cases - muX)/sigX;
+    XSeq(1,:) = total_cases;
+    for ii = 1:(size(YSeq,2)-3)
+        XSeq(2:5,ii) = YSeq(ii:ii+3)';
+    end
+    XSeq_test = [XSeq_test,XSeq];
+    YSeq_test = [YSeq_test,YSeq];
+end
+
+muY = mean(YSeq_test);
+sigY = std(YSeq_test);
+YSeq_test = (YSeq_test - muY)/sigY;
+XSeq_test(2:5,:) = (XSeq_test(2:5,:) - muY)/sigY;
+XSeq_test = XSeq_test(:,1:end-4);
+YSeq_test = YSeq_test(:,5:end);
+%% Training
+
+net = PredictNet(XSeq_train,YSeq_train);
 
 %% Testing
+
 net = resetState(net);
-net = predictAndUpdateState(net,XtrainSeq);
-numTimeStepsTest = size(XtestSeq,2);
+net = predictAndUpdateState(net,XSeq_train);
+numTimeStepsTest = size(XSeq_test,2);
 YPred = zeros(1,numTimeStepsTest);
 for i = 1:numTimeStepsTest
-    [net,YPred(1,i)] = predictAndUpdateState(net,XtestSeq(:,i),'ExecutionEnvironment','gpu');
+    [net,YPred(1,i)] = predictAndUpdateState(net,XSeq_test(:,i),'ExecutionEnvironment','gpu');
 end
 
-YtestSeq = (YtestSeq*sigY) + muY;
-YPred = (YPred*sigY) + muY;
+rmse = norm(YPred-YSeq_test)/norm(YSeq_test);
+disp(rmse)
 
 plot(YPred);
 hold on;
-plot(YtestSeq);
+plot(YSeq_test);
 legend('Pred','Real')
