@@ -28,7 +28,11 @@ function obj = TagsGenerate(obj, varargin)
     %   Warning: TagsGenerate(obj, varargin) not accepted.
 
     %   WANG Yi-yang 28-Apr-2022
-
+    
+    if isa(varargin, 'struct')
+        tp_varargin = [fieldnames(varargin), struct2cell(varargin)]';
+        varargin = tp_varargin(:)';
+    end
     ips = inputParser;
     ips.addParameter('TagContinuity', [], @(x)validateattributes(x, {'numeric', 'logical'}, {}));
     ips.addParameter('TagCategory', [], @(x)validateattributes(x, {'numeric', 'logical'}, {}));
@@ -41,10 +45,8 @@ function obj = TagsGenerate(obj, varargin)
     CustomTagName = OptionsSizeHelper(ips.Results.CustomTagName);
     CustomTagFunction = OptionsSizeHelper(ips.Results.CustomTagFunction, 3);
 
-    % Import Table 
-    if isempty(obj.Table)
-        obj.Table = obj.ImportTable;
-    end
+    % Check Table 
+    if isempty(obj.Table), error('No Table.'); end
 
     % For each variable, Run OneTagGenerate
     variable_count = length(obj.Table.Properties.VariableNames);

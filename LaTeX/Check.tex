@@ -11,7 +11,7 @@
 \allowdisplaybreaks[4]
 \begin{document}
     \renewcommand{\thefootnote}{\fnsymbol{footnote}}
-    \title{{\small《MATLAB程序设计》大作业个人汇报}\\COVID-19疫情数据的统计分析\footnotemark[1]}
+    \title{{\small《MATLAB程序设计》大作业个人汇报}\\COVID-19疫情数据的简要统计分析与预测\footnotemark[1]}
     \author{王逸扬（19300180016）\\杨耕智（19300180112）{\kaishu }}
     \date{2022年5月21日}
     \footnotetext[1]{\kaishu 相关代码及其版本演进托管在\url{https://github.com/maix00/StatisticsAnalysis}.}
@@ -21,7 +21,7 @@
     \tableofcontents
 
     \section{整体分析思路}
-    \section{数据的导入}
+    \section{数据的导入}\label{数据的导入}
         导入数据已有可以使用的\texttt{readtable}函数，且可以通过\texttt{detectImportOptions}函数，在导入数据前，预先探测并修改导入参数. 在此过程中，我们发现如下问题：
         \begin{enumerate}
             \item [(1)] 以\texttt{daily\_info.csv}数据集的\texttt{new\_vaccinations}变量为例. 由于疫情发生初期长时间没有此类数据，\texttt{detectImportOptions}函数探测认为，此变量的变量类型是为\texttt{char}，因此需要手动修改为\texttt{double}.
@@ -51,34 +51,35 @@ data = StatisticsAnalysis( ...
             \flushleft
             其中，\texttt{StatisticsAnalysis}是该类的生成函数，\texttt{"TablePath"}、\texttt{"ImportOptions"}和\texttt{"SelectTab} \texttt{leOptions"}是函数参数名，\texttt{.Table}是该类的一个属性. 之所以取\texttt{StatisticsAnalysis}这个名字，是因为后面将赋予它更多的功能. 更多关于这个类的信息，请参见附录\ref{app:StatisticsAnalysis}. %这个类能够在导入全部所需数据前，先仅导入所要检索的变量所在列的数据，检索出符合条件的行，转化为\texttt{detectImportOptions}所接受的\texttt{DataLines}属性，再合并上\texttt{"ImportOptions"}的函数参量以导入数据.
         \end{sloppypar}
+        \subsection*{简单的数据可视化}
     \section{数据的缺失值处理}
-        我们发现，无论是\texttt{}
+        以\texttt{daily\_info.csv}数据集为例，我们发现如下问题：
+        \begin{enumerate}
+            \item [(1)] 如果要分析变量\texttt{new\_vaccinations}或\texttt{total\_vaccinations}，那么在疫情初期，有很多缺失值，可能需要填充为$0$.
+            \item [(2)] 变量\texttt{new\_cases}可能会出现意外的缺失值，但能从\texttt{total\_cases}变量中恢复.
+            \item [(3)] 一些国家的数据，可能由于更正数据的需要，部分日期的\texttt{total\_cases}会比上一日的少，以致当日的\texttt{new\_cases}成为缺失值.
+            \item [(4)] 一些不能恢复的变量，可能需要线性插值，或者其他的方法连接.
+            \item [(5)] 在统计上不可避免出现一些随机波动，可能需要光滑处理.
+        \end{enumerate}
+        为了解决这些问题，我们编写了一个函数\texttt{tableMissingValuesHelper.m}，可以用来分析缺失值的分布，在这之后再经过人工判断，可以选择不同的参数，以恢复数据. 更多关于这个函数的信息，请参见附录\ref{app:tableMissingValuesHelper}. 
     \section{数据分析过程}
-    \subsection{一般的统计指标}
+    \subsection{一般的统计指标}\label{一般的统计指标}
     \subsection{聚类分析}
     \subsection{疫情数据的分析预测}
     \newpage
     \appendix
     \section{\texttt{StatisticsAnalysis}类}\label{app:StatisticsAnalysis}
     　　本类的主体与相关方法存储在\texttt{./functions/@StatisticsAnalysis}.本类目前只有两个功能，一是数据的导入与检索，二是对表格进行初步的统计分析，计算传入的或预设的统计指标. 
-    
-    　　\texttt{StatisticsAnalysis}生成函数，其实现的伪代码见下.
+
+    　　\texttt{StatisticsAnalysis}生成函数，主要的参数包括\texttt{ImportOptions}，\texttt{SelectTableOptions}和\texttt{TagsGenerateOptions}. 其实现的伪代码见下.
 \begin{matlabcode}
 TablePath作为参数被传入时——
 Step 1: detectImportOptions
 Step 2: 导入与检索表格
-    if SelectFirst && SelectTableOptions非空
-        % 节省内存的导入方法，但额外耗费了一定时间
-        Step (1): 导入表格，列只包含需要检索的变量
-        Step (2): 引用./function/selecttable.m函数检索表格，获取剩余的行数
-        Step (3): 将刚获取的剩余行数，更新到ImportOptions
-        Step (4): 将ImportOptions作为参数，导入表格
-    elseif ~SelectFirst && SelectTableOptions非空
-        Step (1): 将需要检索的变量，作为需要导入的列，更新到ImportOptions
-        Step (2): 将ImportOptions作为参数，导入表格
-        Step (3): 引用./function/selecttable.m函数检索表格
-        Step (4): 去除多余的列（前面辅助检索的列）
-    end
+    Step (1): 将需要检索的变量，作为需要导入的列，更新到ImportOptions
+    Step (2): 用ImportOptions，修改detectImportOptions，并导入表格
+    Step (3): 引用./function/selecttable.m函数检索表格
+    Step (4): 去除多余的列（前面辅助检索的列）
 Step 3: 添加变量标签Tag
         并将标签对应的统计指标添加到Table.Properties.CustomProperties
     Step (1): 引用类方法TagsGenerate以生成标签、计算统计指标
@@ -95,10 +96,12 @@ Step 2: 添加变量标签Tag
     Step (1): 引用类方法TagsGenerate以生成标签、计算统计指标
     Step (2): 引用addprop函数，将统计指标添加到..CustomProperties
 \end{matlabcode}
-    \texttt{StatisticsAnalysis}生成函数，其所有的传入参数包括：\texttt{Table}, \texttt{TablePath}, \texttt{ImportOptions}, \texttt{Select} \texttt{TableOptions}, \texttt{SelectFirst}, \texttt{TagsGenerate}, \texttt{TagsGenerateOptions}. 其中，各种\texttt{Options}参数，要求是左侧为选项名、右侧是选项值的\texttt{cell}.
+    各种\texttt{Options}参数，要求为先选项名、后选项值的\texttt{cell}. 可以参见节\ref{数据的导入}中的例子.
 
-    　　\texttt{TagsGenerateOptions}所接受的选项名，或\texttt{TagsGenerate}方法所接受的传入参数名，包括：\texttt{TagContinuity}, \texttt{TagCategory}, \texttt{CustomTagName}, \texttt{CustomTagFunction}\!等. 预设的变量标签包括：\texttt{unique}, \texttt{invariant}, \texttt{logical}, \texttt{categorical}, \texttt{discrete}, \texttt{continuous}.
+    　　\texttt{TagsGenerateOptions}所接受的选项名，或\texttt{TagsGenerate}方法所接受的传入参数名，主要包括\texttt{CustomTagName}和\texttt{CustomTagFunction}\!等. 预设的变量标签\texttt{DefaultTagNames}包括：\texttt{unique}, \texttt{invariant}, \texttt{logical}, \texttt{categorical}, \texttt{discrete}, \texttt{continuous}. 可以参见\ref{一般的统计指标}中的例子.
 
     \section{\texttt{selecttable}函数}\label{app:selecttable}
-    本函数存储在\texttt{./functions}
+    本函数存储在\texttt{./functions}.
+    \section{\texttt{tableMissingValuesHelper}函数}\label{app:tableMissingValuesHelper}
+    本函数存储在\texttt{./functions}.
 \end{document}

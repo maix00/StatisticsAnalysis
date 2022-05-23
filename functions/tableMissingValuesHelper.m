@@ -5,6 +5,7 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
     ips.addParameter('Style', 'Constant', @(x)any(validatestring(x,{'Increment-Addition','Interpolation','Constant'})));
     ips.addParameter('InterpolationStyle', 'LinearRound', @(x)any(validatestring(x,{'Linear', 'LinearRound'})));
     ips.addParameter('ConstantValues', [], @(x)true);
+    ips.addParameter('OtherOptions', [], @(x)true);
     ips.parse(varargin{:})
     
     % Variable Names To Be Operated
@@ -26,11 +27,7 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
                 error('Increment-Addition Style requires 2 VariableNames.')
             end
         case 'Interpolation', StyleFlag = 'I';
-        case 'Constant'
-            if isempty(ips.Results.ConstantValues)
-                warning('No parameter ConstantValues input -> Will Remove missing rows.')
-            end
-            StyleFlag = 'C';
+        case 'Constant', StyleFlag = 'C';
     end
 
     % List Generation
@@ -64,6 +61,15 @@ function [T, list] = tableMissingValuesHelper(T, varargin)
             T = IncrementAdditionFixingHelper(T, tplist, tplistgroup, IncrementWhere, AdditionWhere, ips.Results.InterpolationStyle);
         case 'I'
         case 'C'
+            if ~isempty(ips.Results.ConstantValues)
+                if isempty(ips.Results.OtherOptions)
+                    T = fillmissing(T, 'constant', ips.Results.ConstantValues);
+                else
+                    T = fillmissing(T, 'constant', ips.Results.ConstantValues, ips.Results.OtherOptions{:});
+                end
+            else
+                warning('No parameter ConstantValues input -> Will Remove missing rows.')
+            end
     end
     
     function T = IncrementAdditionRemoveCracksHelper(T, VariableNames)

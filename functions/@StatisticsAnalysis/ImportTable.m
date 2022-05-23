@@ -12,11 +12,13 @@ function table = ImportTable(obj)
             if isempty(obj.DetectedImportOptions)
                 obj = obj.DetectImport;
             end
-            Length = length(obj.ImportOptions{2});
+            Length = length(obj.UnnestedImportOptions.Variant);
             if Length == 0, obj = obj.ImportOptionsUpdate(0);
+                % Only Invariant Import Options
                 table = readtable(obj.TablePath, obj.DetectedImportOptions);
             elseif Length > 0
-                tableCell = cell(size(obj.ImportOptions{2})); union_flag = true;
+                % Exist Variant Import Options -> Will Import and Union
+                tableCell = cell(size(obj.UnnestedImportOptions.Variant)); union_flag = true;
                 for idx = 1: Length
                     tableCell{idx} = readtable(obj.TablePath, obj.ImportOptionsUpdate(idx).DetectedImportOptions);
                     this_variable_names = tableCell{idx}.Properties.VariableNames;

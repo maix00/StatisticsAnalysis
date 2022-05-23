@@ -51,15 +51,23 @@ classdef StatisticsAnalysis < handle
     %   Version: v20220429
 
     properties
-        Tags = {};
+        Tags
         Table
         TablePath
         ImportOptions
         SelectTableOptions
+        TagsGenerateOptions
+        SelectedVariableNames
+    end
+    
+    properties(Hidden)
+        WholeTable
+        FullVarTable
     end
 
     properties(Hidden, Access=private)
         OneTagFlag = true;
+        UnnestedImportOptions
         DetectedImportOptions % detectImportOptions(TablePath)
         originalDetectedImportOptions
     end
@@ -122,7 +130,11 @@ classdef StatisticsAnalysis < handle
             %       %   Table.Properties.CustomPropertis.Tags
 
             %   WANG Yi-yang 28-Apr-2022
-
+            
+            obj = obj.Update(varargin{:});
+        end
+        
+        function obj = Update(obj, varargin)
             ips = inputParser;
             ips.addParameter('TablePath', {}, @(x)validateattributes(x, {'char', 'string'}, {}));
             ips.addParameter('Table', {}, @(x)validateattributes(x, {'table'}, {}));
@@ -133,13 +145,11 @@ classdef StatisticsAnalysis < handle
             ips.addParameter('TagsGenerateOptions', {}, @(x)true);
             ips.parse(varargin{:})
             
-            obj.TablePath = ips.Results.TablePath;
-            obj.Table = ips.Results.Table;
-            obj.ImportOptions = OptionsSizeHelper(ips.Results.ImportOptions);
-            obj.SelectTableOptions = OptionsSizeHelper(ips.Results.SelectTableOptions);
-            
+            if ~isempty(ips.Results.TablePath), obj.TablePath = ips.Results.TablePath; end
+            if ~isempty(ips.Results.Table), obj.WholeTable = ips.Results.Table; end
+
             % DetectedImportOptions Initialize
-            if ~isempty(obj.TablePath)
+            if ~isempty(ips.Results.TablePath)
                 obj.originalDetectedImportOptions = detectImportOptions(obj.TablePath); 
                 if isempty(ips.Results.DetectedImportOptions)
                     obj.DetectedImportOptions = obj.originalDetectedImportOptions;
@@ -148,31 +158,71 @@ classdef StatisticsAnalysis < handle
             if ~isempty(ips.Results.DetectedImportOptions)
                 obj.DetectedImportOptions = ips.Results.DetectedImportOptions; 
             end
-            % Import and Select Table
-            obj = obj.TableImportAndSelection;
-            % Tags Generation
-            if isempty(ips.Results.TagsGenerateOptions) && (isa(ips.Results.TagsGenerate, 'cell') || isa(ips.Results.TagsGenerate, 'struct') )
-                TagsGenerateOptions = OptionsSizeHelper(ips.Results.TagsGenerate);
+
+            % Update Options
+            for OptionName_idx = {'ImportOptions', 'SelectTableOptions', 'TagsGenerateOptions'}
+                OptionName = OptionName_idx{1};
+                if ~isempty(ips.Results.(OptionName))
+                    if isempty(obj.(OptionName))
+                        obj.(OptionName) = OptionsSizeHelper(ips.Results.(OptionName));
+                    else
+                        obj = obj.UpdateOptions(OptionName, ips.Results.(OptionName));
+                    end
+                end
+            end
+            
+            % SelectedVariableNames
+            if ~isempty(obj.ImportOptions)
+                map = strcmp(fieldnames(obj.ImportOptions), 'SelectedVariableNames');
+                if any(map)
+                    obj.SelectedVariableNames = obj.ImportOptions.SelectedVariableNames;
+                    obj.ImportOptions = rmfield(obj.ImportOptions, 'SelectedVariableNames');
+                end
+            end
+
+            % Import Table
+            if isempty(obj.WholeTable)
+                obj.WholeTable = obj.ImportTable;
+            elseif ~isempty(ips.Results.ImportOptions)
+                % Import table when Import Options were updated more than
+                % just SelectedVariableNames.
+                tp_ImportOptions = fieldnames(OptionsSizeHelper(ips.Results.ImportOptions));
+                tp_ImportOptions(strcmp(tp_ImportOptions, 'SelectedVariableNames')) = [];
+                if numel(tp_ImportOptions) > 0
+                    obj.WholeTable = obj.ImportTable;
+                end
+            end
+
+            % Select Table Rows
+            if ~isempty(ips.Results.SelectTableOptions)
+                obj = obj.TableSelect;
+            elseif isempty(obj.FullVarTable)
+                obj.FullVarTable = obj.WholeTable;
+            end
+
+            % Select Variable Names
+            if ~isempty(obj.SelectedVariableNames)
+                obj.Table = obj.FullVarTable(:,obj.SelectedVariableNames);
             else
-                TagsGenerateOptions = OptionsSizeHelper(ips.Results.TagsGenerateOptions);
-                TagsGenerate = ips.Results.TagsGenerate;
+                obj.Table = obj.FullVarTable;
             end
-            if ~isempty(TagsGenerateOptions)
-                tp = transpose(TagsGenerateOptions);
-                obj.Table = obj.TagsGenerate(tp{:}).addProp;
-            elseif TagsGenerate
-                obj.Table = obj.TagsGenerate.addProp; 
+
+            % Tags Generation
+            if ips.Results.TagsGenerate || ~isempty(ips.Results.TagsGenerateOptions)
+                obj = obj.TagsGenerate(obj.TagsGenerateOptions);
             end
+
             % Table if Empty
-            if isempty(obj.Table)
-                error('Table Empty. Try obj.ImportTable. Remove strict SelectTableOptions.');
+            if isempty(obj.FullVarTable)
+                error('Table Empty.');
             end
+           
         end
-        
-        function TT = get.TimeTable(obj)
+
+        function TT = get.TimeTable(obj, varargin)
             % Try Converting to timetable
             try 
-                TT = table2timetable(obj.Table); 
+                TT = table2timetable(obj.Table, varargin{:}); 
             catch
                 error('Fail to convert to timetable.');
             end
@@ -198,100 +248,95 @@ classdef StatisticsAnalysis < handle
             end
         end
 
-        function obj = UpdateImportOptions(obj, AmmendOptions, flag)
-            if nargin == 2, flag = 'substitute'; end
+        function obj = UpdateOptions(obj, whichOption, AmmendOptions, flag)
+            if nargin == 3, flag = 'substitute'; end
             AmmendOptions = OptionsSizeHelper(AmmendOptions);
-            for idxx = 1: size(AmmendOptions, 1)
-                map = strcmp(obj.ImportOptions(:,1), AmmendOptions{idxx, 1});
-                if any(map)
-                    switch flag
-                        case 'append'
-                            obj.ImportOptions{map,2} = unique([obj.ImportOptions{map,2}, AmmendOptions{idxx, 2}]);
-                        case 'or'
-                            warning('Not supported for now. Try substitue.')
-                        case 'substitute'
-                            obj.ImportOptions(map,2) = AmmendOptions(idxx,2);
+            orifn = fieldnames(obj.(whichOption));
+            switch class(AmmendOptions)
+                case 'struct'
+                    for fn_idx = fieldnames(AmmendOptions)'
+                        fn = fn_idx{1};
+                        bool = any(strcmp(fn, orifn));
+                        switch flag
+                            case 'substitute'
+                                obj.(whichOption).(fn) = AmmendOptions.(fn);
+                            case 'append'
+                                if bool
+                                    obj.(whichOption).(fn) = unique([obj.(whichOption).(fn), AmmendOptions.(fn)]);
+                                else
+                                    obj.(whichOption).(fn) = AmmendOptions.(fn);
+                                end
+                            otherwise
+                                error('Not supported flag. Try "substitute".');
+                        end
                     end
-                else
-                end
+                otherwise
+                    error('Check Syntax.')
             end
         end
 
-        function obj = TableImportAndSelection(obj)
-            copyImportOptions = obj.ImportOptions;
-            copySelectTableOptions = obj.SelectTableOptions;
-            if ~isempty(obj.TablePath) && ~isempty(obj.SelectTableOptions)
-                selectionVariables = obj.SelectTableOptions(:,1)';
-                if ~isempty(obj.ImportOptions)
-                    if any(strcmp(obj.ImportOptions(:,1), 'SelectedVariableNames'))
-                        tpmap = strcmp(obj.ImportOptions(:,1), 'SelectedVariableNames');
-                        tpVariables = obj.ImportOptions{tpmap,2};
-                        obj.ImportOptions{tpmap,2} = unique([tpVariables, selectionVariables]);
-                    end
-                end
-                obj.Table = obj.ImportTable;
-                for idx = 1: size(obj.SelectTableOptions, 1)
-                    switch class(obj.SelectTableOptions{idx, 2})
-                        case 'arange'
-                            if isa(obj.SelectTableOptions{idx, 2}(1).range{1}, 'datetime') || isa(obj.SelectTableOptions{idx, 2}(1).range{1}, 'duration')
-                                thisTimeRange = obj.SelectTableOptions{idx, 2}.ar2tr;
-                                obj.SelectTableOptions(idx, :) = [];
-                            end
-                            break
-                        case 'timerange'
-                            thisTimeRange = obj.SelectTableOptions{idx, 2};
-                            obj.SelectTableOptions(idx, :) = [];
-                            break
-                        case 'cell'
-                            flag = true;
-                            for idxx = 1: numel(obj.SelectTableOptions{idx, 2})
-                                switch class(obj.SelectTableOptions{idx, 2}{idxx})
-                                    case 'arange', obj.SelectTableOptions{idx, 2}{idxx} = obj.SelectTableOptions{idx, 2}{idxx}.ar2tr;
-                                    case 'timerange' % do nothing
-                                    otherwise, flag = false; break
-                                end
-                            end
-                            if flag
-                                thisTimeRange = obj.SelectTableOptions{idx, 2};
-                            end
-                    end
-                end
-                obj.Table = selecttable(obj.Table, obj.SelectTableOptions, true);
-                if exist('thisTimeRange', 'var')
-                    try obj.Table = table2timetable(obj.Table); catch; end
-                    try 
-                        switch class(thisTimeRange)
-                            case 'timerange'
-                                obj.Table = obj.Table(thisTimeRange, :);
-                            case 'cell'
-                                tp = obj.Table;
-                                obj.Table(:,:) = [];
-                                for idxx = 1: numel(thisTimeRange)
-                                    obj.Table = [obj.Table; tp(thisTimeRange{idxx}, :)];
-                                end
+        function obj = UpdateImportOptions(obj, AmmendOptions, flag)
+            obj = obj.UpdateOptions('ImportOptions', AmmendOptions, flag);
+        end
+
+        function obj = UpdateSelectTableOptions(obj, AmmendOptions, flag)
+            obj = obj.UpdateOptions('SelectTableOptions', AmmendOptions, flag);
+        end
+
+        function obj = UpdateTagsGenerateOptions(obj, AmmendOptions, flag)
+            obj = obj.UpdateOptions('TagsGenerateOptions', AmmendOptions, flag);
+        end
+        
+        function obj = TableSelect(obj)
+            if isempty(obj.SelectTableOptions), error('Empty obj.SelectTableOptions.'); end
+            % SelectTableOptions -> Options & TimeOptions
+            Options = obj.SelectTableOptions;
+            TimeOptions = struct;
+            for fn_idx = fieldnames(Options)'
+                fn = fn_idx{1};
+                switch class(Options.(fn))
+                    case 'arange'
+                        if ismember(class(Options.(fn).range{1}), {'datetime', 'duration'})
+                            TimeOptions.(fn) = Options.(fn).ar2tr;
+                            Options = rmfield(Options, fn);
                         end
-                        obj.Table = timetable2table(obj.Table);
-                    catch
-                    end
+                    case 'timerange'
+                        TimeOptions.(fn) = Options.(fn);
+                        Options = rmfield(Options, fn);
+                    case 'cell'
+                        flag = true; flagArange = true;
+                        for idxx = 1: numel(Options.(fn))
+                            switch class(Options.(fn){idxx})
+                                case 'arange' % do nothing
+                                case 'timerange', flagArange = false;
+                                otherwise, flag = false; flagArange = false; break
+                            end
+                        end
+                        if flag && flagArange
+                            TimeOptions.(fn) = Options.(fn).ar2tr;
+                            Options = rmfield(Options, fn);
+                        elseif flag
+                            TimeOptions.(fn) = Options.(fn);
+                            Options = rmfield(Options, fn);
+                        end
                 end
-                if exist('tpVariables', 'var')
-                    obj.Table = obj.Table(:, tpVariables);
-                end
-            elseif isempty(obj.TablePath) && ~isempty(obj.SelectTableOptions)
-                try 
-                    obj.Table = selecttable(obj.Table, obj.SelectTableOptions); 
-                    if isempty(obj.Table)
-                        error('No rows were selected. StatisticsAnalysis ceased.');
-                    end
-                catch ME
-                    error(ME.message);
-                end
-            elseif ~isempty(obj.TablePath)
-                obj.Table = obj.ImportTable;
             end
-            % Restore Options
-            obj.ImportOptions = copyImportOptions;
-            obj.SelectTableOptions = copySelectTableOptions;
+            % Select Table from Options
+            obj.FullVarTable = selecttable(obj.WholeTable, Options, true);
+            % Select Table from TimeOptions
+            for fn_idx = fieldnames(TimeOptions)'
+                fn = fn_idx{1};
+                obj.FullVarTable = table2timetable(obj.FullVarTable, 'RowTimes', fn);
+                switch class(TimeOptions.(fn))
+                    case 'timerange'
+                        obj.FullVarTable = obj.FullVarTable(TimeOptions.(fn), :);
+                    case 'cell'
+                        for idxx = 1: numel(TimeOptions.(fn))
+                            obj.FullVarTable = obj.FullVarTable(TimeOptions.(fn){idxx}, :);
+                        end
+                end
+                obj.FullVarTable = timetable2table(obj.FullVarTable);
+            end
         end
     end
     
@@ -306,9 +351,6 @@ classdef StatisticsAnalysis < handle
             %   WANG Yi-yang 28-Apr-2022
 
             if ~isempty(obj.ImportOptions)
-                if isa(obj.ImportOptions, 'cell')
-                    obj.ImportOptions = cell2struct(obj.ImportOptions(:,2), obj.ImportOptions(:,1), 1);
-                end
                 copy = obj.ImportOptions;
                 fn = fieldnames(copy); lg = length(fn);
                 map = true(lg, 1); lgMap = ones(1, lg);
@@ -338,9 +380,9 @@ classdef StatisticsAnalysis < handle
                         end
                     end
                 else
-                    opt = cell.empty;
+                    opt = [];
                 end
-                obj.ImportOptions = {copy, 'Invariant'; opt, 'Variant'};
+                obj.UnnestedImportOptions = struct('Invariant', copy, 'Variant', opt);
             end
         end
 
@@ -352,16 +394,16 @@ classdef StatisticsAnalysis < handle
             %   Inside usage. Invoked by <a href = "matlab:help DetectImport">DetectImport</a> and <a href = "matlab:help ImportTable">ImportTable</a>.
 
             %   WANG Yi-yang 28-Apr-2022
-            
+            if isempty(obj.UnnestedImportOptions); error('Empty obj.UnnestedImportOptions. Use obj.ImportOptionsUnnest first.'); end
             if (nargin == 1), idx = 0; end
-            fn1 = fieldnames(obj.ImportOptions{1}); 
+            fn1 = fieldnames(obj.UnnestedImportOptions.Invariant); 
             for idx1 = 1: length(fn1)
-                obj = IOUHelper(obj, fn1{idx1}, obj.ImportOptions{1}.(fn1{idx1}));
+                obj = IOUHelper(obj, fn1{idx1}, obj.UnnestedImportOptions.Invariant.(fn1{idx1}));
             end
             if idx > 0
-                fn2 = fieldnames(obj.ImportOptions{2}(idx));
+                fn2 = fieldnames(obj.UnnestedImportOptions.Variant(idx));
                 for idx2 = 1: length(fn2)
-                    obj = IOUHelper(obj, fn2{idx2}, obj.ImportOptions{2}(idx).(fn2{idx2}));
+                    obj = IOUHelper(obj, fn2{idx2}, obj.UnnestedImportOptions.Variant(idx).(fn2{idx2}));
                 end
             end
 
@@ -369,8 +411,7 @@ classdef StatisticsAnalysis < handle
                 switch fn
                     case 'VariableTypes'
                         if isa(val, 'cell')
-                            val = OptionsSizeHelper(val);
-                            obj = IOUHelper(obj, fn, cell2struct(val(:,2), val(:,1), 1));
+                            obj = IOUHelper(obj, fn, OptionsSizeHelper(val));
                         elseif isa(val, 'struct')
                             fnl = fieldnames(val);
                             for idxx = 1: length(fnl)
@@ -407,21 +448,29 @@ end
 
 % Helpers
 function Options = OptionsSizeHelper(Options, numOneLine)
-    if nargin == 1, numOneLine = 2; end
-    if ~isempty(Options)
-        sz = size(Options);
-        if isa(Options, 'cell') && sz(1) == 1
-            if sz(2) == numOneLine
-                % do nothing
-            elseif mod(sz(2), numOneLine) == 0
-                tp = cell(sz(2)/numOneLine, numOneLine);
-                for idx = 1: sz(2)/numOneLine
-                    tp(idx, :) = Options(1, numOneLine*(idx-1)+1: numOneLine*idx);
+    switch class(Options)
+        case 'struct' % do nothing
+        case 'cell'
+            if nargin == 1, numOneLine = 2; end
+            if ~isempty(Options)
+                sz = size(Options);
+                if isa(Options, 'cell') && sz(1) == 1
+                    if sz(2) == numOneLine
+                        % do nothing
+                    elseif mod(sz(2), numOneLine) == 0
+                        tp = cell(sz(2)/numOneLine, numOneLine);
+                        for idx = 1: sz(2)/numOneLine
+                            tp(idx, :) = Options(1, numOneLine*(idx-1)+1: numOneLine*idx);
+                        end
+                        Options = tp;
+                    else
+                        error('Check Input. Length not match.');
+                    end
                 end
-                Options = tp;
-            else
-                error('Check Input. Length not match.');
             end
-        end
+            % Options Convert to struct
+            if numOneLine == 2
+                Options = cell2struct(Options(:,2), Options(:,1), 1);
+            end
     end
 end

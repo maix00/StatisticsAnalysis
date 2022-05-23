@@ -7,6 +7,7 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest, QuickStyle
 
     if nargin == 2, QuickStyle = false; end
     cmpFL = {[]};
+    if isa(theRequest, 'struct'), theRequest = [fieldnames(theRequest), struct2cell(theRequest)]; end
     RequestSize = size(theRequest, 1);
     if RequestSize > 1
         for index = 1: 1: RequestSize
@@ -23,17 +24,12 @@ function [thisTable, cmp, cmpFL] = selecttable(thisTable, theRequest, QuickStyle
         cmp = lastcmp;
     elseif RequestSize == 1
         % Selection
-        try
-            cmp = logical(cmp_generation(thisTable, theRequest{1, 1}, theRequest{1, 2}));
-            thisTable = thisTable(cmp, :);
-            if any(size(thisTable) == 0)
-                beep; warning('No matching tuples.');
-            end
-            if ~QuickStyle, cmpFL = FirstLastFindTrue(cmp); end
-        catch
-            cmp = arrayfun(@(x) 1, 1:size(thisTable, 1));
-            beep; warning('Input Error Warning. Input [table, {FieldName: char/string, Value: numeric/char/string/arange/cell; other_requests}].');
+        cmp = logical(cmp_generation(thisTable, theRequest{1, 1}, theRequest{1, 2}));
+        thisTable = thisTable(cmp, :);
+        if any(size(thisTable) == 0)
+            beep; warning('No matching tuples.');
         end
+        if ~QuickStyle, cmpFL = FirstLastFindTrue(cmp); end
     else
         beep; warning('Syntax Error Warning. The size of the Request Cell does not match.');
     end
