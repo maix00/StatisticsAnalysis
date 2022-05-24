@@ -1,28 +1,10 @@
 function obj = TagsGenerate(obj, varargin)
-    % TagsGenerate does statisticsAnalysis and generate tags.
-    %
-    %   Tags include:
-    %       - TagNames: 'unique', 'invariant', 'logical', 'categorical',
-    %                    'discrete', 'continuous'
-    %       - UniqueCount 
-    %       - NaNCount & NaNRatio
-    %       - EmptyCount & EmptyRatio
-    %       - LogicalRatio
-    %       - CategoricalRatio & CategoricalVariance
-    %       - Min, Max, Mean, Median, Mode, Variance (for Continuous Tag)
-    %
-    %   % These Values were automatically calculated by TagsGenerate.
-    %       - Custom tags not supported for now.
+    % TagsGenerate does statistics analyses (designates tag names to each
+    % variable and calculates given statistical indicators under some tag
+    % names). TagsGenerate also adds these calculation results to Table via
+    % Table.Properties.CustomProperties.
     %
     %   obj = obj.TagsGenerate(varargin)
-    %
-    %   varargin Examples:
-    %       - TagContinuity / TagCategory:                          [0 1 0 1 1]
-    %       - CustomTagName:                {'TagName', [0 1 0 1 1]; otherName}
-    %       - OutputClass:                        'table' or 'cell' or 'struct'
-    %       - CustomTagFunction:
-    %                           {'TagName', 'funcName', func_handle; otherfunc}
-    %                   'TagName' can be 'table' which applied to all TagNames.
     %
     %   For each variable, TagsGenerate would invoke <a href = "matlab:help OneTagGenerate">OneTagGenerate</a>.
     %   Warning: TagsGenerate(obj, varargin) not accepted.

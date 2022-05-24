@@ -1,4 +1,4 @@
-classdef arange
+classdef arange < handle
     % ARANGE Arange is a class of range data.
     %   R = ARANGE(M_by_xxx_by_2, intervalType, unit)
     %   R = ARANGE(M_by_xxx_by_2, intervalType)

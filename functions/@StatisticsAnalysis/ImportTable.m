@@ -8,12 +8,12 @@ function table = ImportTable(obj)
     
     if ~isempty(obj.TablePath)
         if ~isempty(obj.ImportOptions)
-            obj = obj.ImportOptionsUnnest; % Import Options Un-nest
+            obj.ImportOptionsUnnest; % Import Options Un-nest
             if isempty(obj.DetectedImportOptions)
-                obj = obj.DetectImport;
+                obj.DetectImport;
             end
             Length = length(obj.UnnestedImportOptions.Variant);
-            if Length == 0, obj = obj.ImportOptionsUpdate(0);
+            if Length == 0, obj.ImportOptionsUpdate(0);
                 % Only Invariant Import Options
                 table = readtable(obj.TablePath, obj.DetectedImportOptions);
             elseif Length > 0

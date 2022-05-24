@@ -1,11 +1,30 @@
 function [thisTag, thisTagHelper, thisCell] = OneTagGenerate(obj, thisFieldName, varargin)
     % OneTagGenerate generates one tag from one field/variable.
     %
-    %   [thisTag, thisTagHelper, thisCell] = obj.OneTagGenerate(thisFieldName, varargin)
-    %       'TagContinuity', 'TagCategory', 'CustomTagName', 'CustomTagFunction'
-    %   
-    %   Outside and Inside usage. Invoked by <a href = "matlab:help TagsGenerate">TagsGenerate</a>.
-    %   Warning: OneTagGenerate(obj, thisFieldName, varargin) not accepted.
+    %   obj = obj.<a href = "matlab:help TagsGenerate">TagsGenerate</a>(varargin)
+    %   [tag, tag_name, cell] = OneTagGenerate(obj, field_name, varargin)
+    %
+    %   Tag names will be assigned to each variable. For different tag 
+    %   names, different tag functions would be applied to calculate
+    %   statistical indicators.
+    %
+    %   Default tag names and indicators:
+    %       - TagNames: 
+    %             Default: 'unique', 'invariant', 'logical', 'categorical',
+    %                      'discrete', 'continuous'
+    %       - UniqueCount
+    %       - MissingCount, MissingRatio, MissingMap
+    %       - LogicalRatio
+    %       - CategoricalRatio & CategoricalVariance
+    %       - Min, Max, Mean, Median, Mode, Variance (for Continuous Tag)
+    %
+    %   Parameters Example:
+    %       - TagContinuity / TagCategory:                          [0 1 0 1 1]
+    %       - CustomTagName:                {'TagName', [0 1 0 1 1]; otherName}
+    %       - CustomTagFunction:
+    %                           {'TagName', 'funcName', func_handle; otherfunc}
+    %             'TagName' can be set as 'table' which applied to all TagNames.
+    %
 
     %   WANG Yi-yang 28-Apr-2022
 

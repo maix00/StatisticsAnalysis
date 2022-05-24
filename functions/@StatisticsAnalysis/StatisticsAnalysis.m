@@ -3,52 +3,36 @@ classdef StatisticsAnalysis < handle
     %
     %  %-------------------------------------------------------------------
     %   STATISTICSANALYSIS Properties:
-    %     Import Settings Properties:
+    %     Settings Properties:
     %       TablePath
     %       ImportOptions
+    %       SelectTableOptions
+    %       TagsGenerateOptions
+    %       SelectedVariableNames
     %       detectedImportOptions
-    %       Table % tables can be directly imported.
     %       
     %     Analysis Report Properties:
     %       Tags
+    %       Table
     %       
     %  %-------------------------------------------------------------------
-    %   STATISTICSANALYSIS Methods and Functions (Outside):
-    %     Creation:
-    %       <a href = "matlab:help StatisticsAnalysis/StatisticsAnalysis">StatisticsAnalysis</a>(varargin) -> obj
+    %   STATISTICSANALYSIS Creation Methods:
+    %     obj = StatisticsAnalysis(varargin)
     %
-    %     Table Import and its Setting:
-    %       <a href = "matlab:help DetectImport">DetectImport</a>(obj) -> obj
-    %       <a href = "matlab:help ImportTable">ImportTable</a>(obj) -> table
-    %     
-    %     Statistics Analysis and Table Properties Addition:
-    %       obj.<a href = "matlab:help TagsGenerate">TagsGenerate</a>(varargin) -> obj
-    %       obj.<a href = "matlab:help OneTagGenerate">OneTagGenerate</a>(thisFieldName, varargin) -> [thisTag, thisTagHelper, thisCell]
-    %       obj.<a href = "matlab:help addProp">addProp</a> -> table
-    %           OR obj.addProp(table1) -> table2
-    %       obj.<a href = "matlab:help rmProp">rmProp</a>(varargin) -> [obj, table]
-    %
-    %   Operation Examples see <a href = "matlab:help StatisticsAnalysis/StatisticsAnalysis">StatisticsAnalysis</a>.
+    %   Parameters Example:    
+    %       - TablePath                               './Project/table.csv'
+    %       - Table                                    table (in Workspace)
+    %       - ImportOptions                       {'DateLines', [2, 3], ...
+    %                                   'SelectedVariableNames', {'date'} }
+    %       - DetectedImportOptions                      DIO (in Workspace)
+    %       - SelectTableOptions               {'Var1', Val1, 'Var2', Val2}
+    %       - TagsGenerate                                             true
+    %       - TagsGenerateOptions                      same as <a href = "matlab:help TagsGenerate">TagsGenerate</a>
     %
     %  %-------------------------------------------------------------------
-    %   Default Tags include:
-    %       - TagNames: 'unique', 'invariant', 'logical', 'categorical',
-    %                    'discrete', 'continuous'
-    %       - UniqueCount 
-    %       - ValueClass
-    %       - MissingCount & MissingRatio
-    %       - LogicalRatioFirstValue & LogicalRatio
-    %       - CategoricalRatio
-    %       - Min, Max, Mean, Median, Mode, Variance (for Continuous Variable)
-    %   
-    %   % These Values were automatically calculated by <a href = "matlab:help TagsGenerate">TagsGenerate</a>.
-    %       - Custom tags supported by parameters in <a href = "matlab:help TagsGenerate">TagsGenerate</a> and <a href = "matlab:help OneTagGenerate">OneTagGenerate</a>
-    %         as CustomTagNames and CustomTagFunction.
-    %
-    %  %-------------------------------------------------------------------
-    %    Author: WANG Yi-yang
-    %      Date: 28-Apr-2022
-    %   Version: v20220429
+    %       Author: WANG Yi-yang
+    %      Created: 28-Apr-2022
+    %   LastEdited: 23-May-2022
 
     properties
         Tags
@@ -131,7 +115,7 @@ classdef StatisticsAnalysis < handle
 
             %   WANG Yi-yang 28-Apr-2022
             
-            obj = obj.Update(varargin{:});
+            obj.Update(varargin{:});
         end
         
         function obj = Update(obj, varargin)
@@ -166,7 +150,7 @@ classdef StatisticsAnalysis < handle
                     if isempty(obj.(OptionName))
                         obj.(OptionName) = OptionsSizeHelper(ips.Results.(OptionName));
                     else
-                        obj = obj.UpdateOptions(OptionName, ips.Results.(OptionName));
+                        obj.UpdateOptions(OptionName, ips.Results.(OptionName));
                     end
                 end
             end
@@ -195,7 +179,7 @@ classdef StatisticsAnalysis < handle
 
             % Select Table Rows
             if ~isempty(ips.Results.SelectTableOptions)
-                obj = obj.TableSelect;
+                obj.TableSelect;
             elseif isempty(obj.FullVarTable)
                 obj.FullVarTable = obj.WholeTable;
             end
@@ -209,7 +193,7 @@ classdef StatisticsAnalysis < handle
 
             % Tags Generation
             if ips.Results.TagsGenerate || ~isempty(ips.Results.TagsGenerateOptions)
-                obj = obj.TagsGenerate(obj.TagsGenerateOptions);
+                obj.TagsGenerate(obj.TagsGenerateOptions);
             end
 
             % Table if Empty
@@ -276,15 +260,15 @@ classdef StatisticsAnalysis < handle
         end
 
         function obj = UpdateImportOptions(obj, AmmendOptions, flag)
-            obj = obj.UpdateOptions('ImportOptions', AmmendOptions, flag);
+            obj.UpdateOptions('ImportOptions', AmmendOptions, flag);
         end
 
         function obj = UpdateSelectTableOptions(obj, AmmendOptions, flag)
-            obj = obj.UpdateOptions('SelectTableOptions', AmmendOptions, flag);
+            obj.UpdateOptions('SelectTableOptions', AmmendOptions, flag);
         end
 
         function obj = UpdateTagsGenerateOptions(obj, AmmendOptions, flag)
-            obj = obj.UpdateOptions('TagsGenerateOptions', AmmendOptions, flag);
+            obj.UpdateOptions('TagsGenerateOptions', AmmendOptions, flag);
         end
         
         function obj = TableSelect(obj)
