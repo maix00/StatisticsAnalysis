@@ -16,7 +16,7 @@ countries = StatisticsAnalysis( ...
 XSeq_train = [];
 YSeq_train = [];
 
-for country_name = {'France','Germany','Hungary','Japan'}
+for country_name = {'Australia','Canada','France','United States'}
 
     % Load Data: pandemic data
     path_daily = './data/COVID19/daily_info.csv';
@@ -73,11 +73,16 @@ YSeq_train = (YSeq_train - muY)/sigY;
 XSeq_train(2:5,:) = (XSeq_train(2:5,:) - muY)/sigY;
 XSeq_train = XSeq_train(:,1:end-4);
 YSeq_train = YSeq_train(:,5:end);
+
+% Randomize
+r = randperm(size(XSeq_train,2));
+XSeq_train = XSeq_train(:,r);
+YSeq_train = YSeq_train(:,r);
 %% Load Data: testing set
 XSeq_test = [];
 YSeq_test = [];
 
-for country_name = {'Sweden'}
+for country_name = {'China'}
 
     % Load Data: pandemic data
     path_daily = './data/COVID19/daily_info.csv';
@@ -134,6 +139,7 @@ YSeq_test = (YSeq_test - muY)/sigY;
 XSeq_test(2:5,:) = (XSeq_test(2:5,:) - muY)/sigY;
 XSeq_test = XSeq_test(:,1:end-4);
 YSeq_test = YSeq_test(:,5:end);
+
 %% Training
 
 net = PredictNet(XSeq_train,YSeq_train);
