@@ -42,7 +42,6 @@ char = data*coeff;
 char_cut = char(:,1);
 num_types = 5;
 idx = kmeans(char_cut,num_types);
-histogram(idx);
 
 properties = cell(size(char,1),2);
 for ii = 1:size(char,1)
