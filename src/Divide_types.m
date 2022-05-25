@@ -1,7 +1,6 @@
-function [country_type,properties] = Divide_types()
+function [country_type, properties] = Divide_types(cut, num_types)
 % Load Data and Dealing with missing values
-clc; clear;
-format long
+
 path_daily = './data/COVID19/daily_info.csv';
 record_countries = StatisticsAnalysis( ...
     'TablePath', path_daily, ...
@@ -39,8 +38,7 @@ end
 coeff = pca(data);
 
 char = data*coeff;
-char_cut = char(:,1);
-num_types = 5;
+char_cut = char(:,1:cut);
 idx = kmeans(char_cut,num_types);
 
 properties = cell(size(char,1),2);

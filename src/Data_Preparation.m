@@ -1,8 +1,8 @@
-function [XSeq_all, YSeq_all, muY, sigY] = Data_Preparation(country_names, randomize,...
-    smoothen)
+function [XSeq_all, YSeq_all, muY, sigY] = Data_Preparation(country_names, ...
+    randomize, smoothen)
 
 % Some preparation
-[~, properties] = Divide_types();
+[~, properties] = Divide_types(3,6);
 
 % Load Data: training set
 XSeq_all = [];

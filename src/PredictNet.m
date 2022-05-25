@@ -1,5 +1,5 @@
 function net = PredictNet(XtrainSeq, YtrainSeq)
-numFeatures = 6;
+numFeatures = 8;
 numResponses = 1;
 numHiddenUnits = 400;
 
