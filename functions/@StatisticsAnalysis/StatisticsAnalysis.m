@@ -41,6 +41,8 @@ classdef StatisticsAnalysis < handle
         ImportOptions
         SelectTableOptions
         TagsGenerateOptions
+        MissingValuesReport
+        MissingValuesOptions
         SelectedVariableNames
     end
     
@@ -125,6 +127,7 @@ classdef StatisticsAnalysis < handle
             ips.addParameter('ImportOptions', {}, @(x)validateattributes(x, {'cell'}, {}));
             ips.addParameter('DetectedImportOptions', {}, @(x)true);
             ips.addParameter('SelectTableOptions', {}, @(x)true);
+            ips.addParameter('MissingValuesOptions', {}, @(x)true);
             ips.addParameter('TagsGenerate', false, @(x)true);
             ips.addParameter('TagsGenerateOptions', {}, @(x)true);
             ips.parse(varargin{:})
@@ -144,11 +147,14 @@ classdef StatisticsAnalysis < handle
             end
 
             % Update Options
+            if ~isempty(ips.Results.MissingValuesOptions)
+                obj.MissingValuesOptions = ips.Results.MissingValuesOptions;
+            end
             for OptionName_idx = {'ImportOptions', 'SelectTableOptions', 'TagsGenerateOptions'}
                 OptionName = OptionName_idx{1};
                 if ~isempty(ips.Results.(OptionName))
                     if isempty(obj.(OptionName))
-                        obj.(OptionName) = OptionsSizeHelper(ips.Results.(OptionName));
+                        obj.(OptionName) = OptionsSizeHelper(ips.Results.(OptionName), 2, true);
                     else
                         obj.UpdateOptions(OptionName, ips.Results.(OptionName));
                     end
@@ -170,7 +176,7 @@ classdef StatisticsAnalysis < handle
             elseif ~isempty(ips.Results.ImportOptions)
                 % Import table when Import Options were updated more than
                 % just SelectedVariableNames.
-                tp_ImportOptions = fieldnames(OptionsSizeHelper(ips.Results.ImportOptions));
+                tp_ImportOptions = fieldnames(OptionsSizeHelper(ips.Results.ImportOptions, 2, true));
                 tp_ImportOptions(strcmp(tp_ImportOptions, 'SelectedVariableNames')) = [];
                 if numel(tp_ImportOptions) > 0
                     obj.WholeTable = obj.ImportTable;
@@ -190,17 +196,27 @@ classdef StatisticsAnalysis < handle
             else
                 obj.Table = obj.FullVarTable;
             end
+            
+            % Table if Empty
+            if isempty(obj.FullVarTable)
+                error('Table Empty.');
+            end
+            
+            % Missing Values Helper
+            % This Option is not reversible.
+            if ~isempty(ips.Results.MissingValuesOptions)
+                TMV = TableMissingValues(obj.Table, obj.MissingValuesOptions);
+                obj.Table = TMV.Table;
+                obj.MissingValuesReport = TMV.Missing;
+            else
+                TMV = TableMissingValues(obj.Table);
+                obj.MissingValuesReport = TMV.Missing;
+            end
 
             % Tags Generation
             if ips.Results.TagsGenerate || ~isempty(ips.Results.TagsGenerateOptions)
                 obj.TagsGenerate(obj.TagsGenerateOptions);
             end
-
-            % Table if Empty
-            if isempty(obj.FullVarTable)
-                error('Table Empty.');
-            end
-           
         end
 
         function TT = get.TimeTable(obj, varargin)
@@ -234,7 +250,7 @@ classdef StatisticsAnalysis < handle
 
         function obj = UpdateOptions(obj, whichOption, AmmendOptions, flag)
             if nargin == 3, flag = 'substitute'; end
-            AmmendOptions = OptionsSizeHelper(AmmendOptions);
+            AmmendOptions = OptionsSizeHelper(AmmendOptions, 2, true);
             orifn = fieldnames(obj.(whichOption));
             switch class(AmmendOptions)
                 case 'struct'
@@ -269,6 +285,10 @@ classdef StatisticsAnalysis < handle
 
         function obj = UpdateTagsGenerateOptions(obj, AmmendOptions, flag)
             obj.UpdateOptions('TagsGenerateOptions', AmmendOptions, flag);
+        end
+
+        function obj = RenewSelectedVariableNames(obj)
+            obj.SelectedVariableNames = obj.originalDetectedImportOptions.VariableNames;
         end
         
         function obj = TableSelect(obj)
@@ -395,7 +415,7 @@ classdef StatisticsAnalysis < handle
                 switch fn
                     case 'VariableTypes'
                         if isa(val, 'cell')
-                            obj = IOUHelper(obj, fn, OptionsSizeHelper(val));
+                            obj = IOUHelper(obj, fn, OptionsSizeHelper(val, 2, true));
                         elseif isa(val, 'struct')
                             fnl = fieldnames(val);
                             for idxx = 1: length(fnl)
@@ -409,7 +429,7 @@ classdef StatisticsAnalysis < handle
                         end
                     case {'Name', 'FillValue', 'TreatAsMissing', 'EmptyFieldRule', 'QuateRule', 'Prefixes', 'Suffixes'}
                         if isa(val, 'cell')
-                            val = OptionsSizeHelper(val);
+                            val = OptionsSizeHelper(val, 2, true);
                             obj = IOUHelper(obj, fn, cell2struct(val(:,2), val(:,1), 1));
                         elseif isa(val, 'struct')
                             fnl = fieldnames(val);
@@ -427,34 +447,5 @@ classdef StatisticsAnalysis < handle
                 end
             end
         end
-    end
-end
-
-% Helpers
-function Options = OptionsSizeHelper(Options, numOneLine)
-    switch class(Options)
-        case 'struct' % do nothing
-        case 'cell'
-            if nargin == 1, numOneLine = 2; end
-            if ~isempty(Options)
-                sz = size(Options);
-                if isa(Options, 'cell') && sz(1) == 1
-                    if sz(2) == numOneLine
-                        % do nothing
-                    elseif mod(sz(2), numOneLine) == 0
-                        tp = cell(sz(2)/numOneLine, numOneLine);
-                        for idx = 1: sz(2)/numOneLine
-                            tp(idx, :) = Options(1, numOneLine*(idx-1)+1: numOneLine*idx);
-                        end
-                        Options = tp;
-                    else
-                        error('Check Input. Length not match.');
-                    end
-                end
-            end
-            % Options Convert to struct
-            if numOneLine == 2
-                Options = cell2struct(Options(:,2), Options(:,1), 1);
-            end
     end
 end
