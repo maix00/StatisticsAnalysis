@@ -3,8 +3,8 @@ function cmpFL = FirstLastFindTrue(cmp)
     formerLast = 0;
     while ~isempty(find(cmp, true))
         thisFirst = find(cmp,true,'first');
-        for thisLast = thisFirst: length(cmp) - formerLast
-            if cmp(thisLast + 1) == 0
+        for thisLast = thisFirst: length(cmp)
+            if thisLast == length(cmp) || cmp(thisLast + 1) == 0
                 break
             end
         end
