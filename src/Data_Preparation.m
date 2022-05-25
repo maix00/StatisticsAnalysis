@@ -1,7 +1,7 @@
-function [XSeq_all, YSeq_all] = Data_Preparation(country_names, randomize)
+function [XSeq_all, YSeq_all, muY, sigY] = Data_Preparation(country_names, randomize,...
+    smoothen)
 
 % Some preparation
-path = './data/COVID19/country.csv';
 [~, properties] = Divide_types();
 
 % Load Data: training set
@@ -42,6 +42,11 @@ for country_name = country_names
     % Here using total_cases, values to predict new_cases
 
     YSeq = table2array(data(:,2))';
+    if smoothen
+        kernel = [1/4,1/4,1/4,1/4];
+        YSeq = conv(kernel,YSeq);
+        YSeq = YSeq(:,1:end-3);
+    end
     XSeq = zeros(5+size(values,1),size(YSeq,2));
     for col = 1:size(YSeq,2)
         XSeq(6:end, col) = values;

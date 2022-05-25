@@ -1,0 +1,17 @@
+\contentsline {section}{\numberline {1}整体分析思路与代码分工}{1}{section.1}% 
+\contentsline {subsection}{\numberline {1.1}数据观察与简要分析}{1}{subsection.1.1}% 
+\contentsline {subsection}{\numberline {1.2}整体分析思路}{2}{subsection.1.2}% 
+\contentsline {paragraph}{\unhbox \voidb@x \setbox \@tempboxa \hbox {\color@begingroup \kern \fboxsep {第一种路径}\kern \fboxsep \endgraf \endgroup }\XC@frameb@x \relax }{2}{section*.2}% 
+\contentsline {paragraph}{\unhbox \voidb@x \setbox \@tempboxa \hbox {\color@begingroup \kern \fboxsep {第二种路径}\kern \fboxsep \endgraf \endgroup }\XC@frameb@x \relax }{2}{section*.3}% 
+\contentsline {paragraph}{\unhbox \voidb@x \setbox \@tempboxa \hbox {\color@begingroup \kern \fboxsep {第三种路径}\kern \fboxsep \endgraf \endgroup }\XC@frameb@x \relax }{2}{section*.4}% 
+\contentsline {subsection}{\numberline {1.3}代码分工}{3}{subsection.1.3}% 
+\contentsline {section}{\numberline {2}数据的导入与检索}{3}{section.2}% 
+\contentsline {section}{\numberline {3}数据的缺失值处理}{4}{section.3}% 
+\contentsline {section}{\numberline {4}数据分析过程}{4}{section.4}% 
+\contentsline {subsection}{\numberline {4.1}一般的统计指标}{4}{subsection.4.1}% 
+\contentsline {subsection}{\numberline {4.2}聚类分析}{4}{subsection.4.2}% 
+\contentsline {subsection}{\numberline {4.3}疫情数据的分析预测}{4}{subsection.4.3}% 
+\contentsline {section}{\numberline {A}\texttt {StatisticsAnalysis}类}{5}{appendix.A}% 
+\contentsline {section}{\numberline {B}\texttt {selecttable}函数}{6}{appendix.B}% 
+\contentsline {section}{\numberline {C}\texttt {tableMissingValuesHelper}函数}{6}{appendix.C}% 
+\contentsline {section}{\numberline {D}利用有关数据可以进行的可视化}{6}{appendix.D}% 
