@@ -1,14 +1,17 @@
 function [XSeq_all, YSeq_all, muY, sigY] = Data_Preparation(country_names, ...
-    randomize, smoothen)
+                                                            smoothen)
 
 % Some preparation
 [~, properties] = Divide_types(3,6);
 
 % Load Data: training set
-XSeq_all = [];
-YSeq_all = [];
+XSeq_all = cell(size(country_names,2),1);
+YSeq_all = cell(size(country_names,2),1);
+muY = cell(1,size(country_names,2));
+sigY = cell(1,size(country_names,2));
 
-for country_name = country_names
+for t = 1:size(country_names,2)
+    country_name = country_names{1,t};
 
     % Load Data: pandemic data
     path_daily = './data/COVID19/daily_info.csv';
@@ -60,21 +63,15 @@ for country_name = country_names
     for ii = 1:(size(YSeq,2)-3)
         XSeq(2:5,ii) = YSeq(ii:ii+3)';
     end
-    XSeq_all = [XSeq_all,XSeq];
-    YSeq_all = [YSeq_all,YSeq];
-end
 
-muY = mean(YSeq_all);
-sigY = std(YSeq_all);
-YSeq_all = (YSeq_all - muY)/sigY;
-XSeq_all(2:5,:) = (XSeq_all(2:5,:) - muY)/sigY;
-XSeq_all = XSeq_all(:,1:end-4);
-YSeq_all = YSeq_all(:,5:end);
+    muY{1,t} = mean(YSeq);
+    sigY{1,t} = std(YSeq);
+    YSeq = (YSeq - muY{1,t})/sigY{1,t};
+    XSeq(2:5,:) = (XSeq(2:5,:) - muY{1,t})/sigY{1,t};
+    XSeq = XSeq(:,1:end-4);
+    YSeq = YSeq(:,5:end);
 
-% Randomize
-if randomize
-    r = randperm(size(XSeq_all,2));
-    XSeq_all = XSeq_all(:,r);
-    YSeq_all = YSeq_all(:,r);
+    XSeq_all{t, 1} = XSeq;
+    YSeq_all{t, 1} = YSeq;
 end
 end
