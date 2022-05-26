@@ -107,8 +107,21 @@ classdef TableMissingValues < handle
                                     opt = opt_idx{1};
                                     obj.GeneralOptions(idx, 1).(opt) = GeneralOptions{idx, 3}.(opt);
                                 end
-                            else
-                                error('Ambiguous inputs in Cell.Options, use Struct or Tabular.')
+                            elseif isa(GeneralOptions{idx, 3}, 'cell')
+                                try
+                                    tpO = OptionsSizeHelper(GeneralOptions{idx, 3}, 2, true);
+                                    vn = fieldnames(tpO);
+                                    ValidateStyleOptions(thisStyle, thisVN, vn);
+                                    obj.GeneralOptions(idx, 1).VariableNames = GeneralOptions{idx, 1};
+                                    obj.GeneralOptions(idx, 1).Style = char(thisStyle);
+                                    for opt_idx = vn'
+                                        opt = opt_idx{1};
+                                        obj.GeneralOptions(idx, 1).(opt) = tpO.(opt);
+                                    end
+                                catch ME
+                                    warning('Ambiguous inputs in Cell.Options, use Struct or Tabular.');
+                                    error(ME.message);
+                                end
                             end
                         end
                     end
@@ -789,6 +802,11 @@ classdef TableMissingValues < handle
                             otherwise, error('DecreaseAdditionStyle not supported. Try Exponential, LinearScale, or DoNothing.')
                         end
                     end
+                end
+                switch DAS
+                    case 'DoNothing' % do nothing
+                    otherwise
+                       warning('To turn off this feature, set parameter "DecreasingAdditionStyle" as "DoNothing".');
                 end
                 % Rounding and Adding Up
                 if isfield(Option, 'InterpolationStyle') && strcmp(Option.InterpolationStyle, 'LinearRound')

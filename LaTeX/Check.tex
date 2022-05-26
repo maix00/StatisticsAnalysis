@@ -3,7 +3,7 @@
 \usepackage{amsmath,amsfonts,amssymb,amsthm,bm,extarrows,mathrsfs,dutchcal}
 \usepackage{ctex}%中文支持
 \usepackage{geometry}%页面布局
-	\geometry{top=25mm,bottom=25mm,left=25mm,right=25mm}%页面布局
+	\geometry{top=25mm,bottom=25mm,left=30mm,right=30mm}%页面布局
 	\setlength\parindent{2em}% 每行缩进两个汉字
 	\setmainfont{Times New Roman}% 设置字体
 	%\setmonofont{Courier New}
@@ -14,6 +14,7 @@
 	\newcommand*{\song}{\CJKfamily{song}}
 \usepackage{xcolor}%颜色
 \usepackage{graphicx}%图片
+\usepackage{setspace}
 % \usepackage{setspace, changepage, enumitem, verbatim}
 % \usepackage{tikz, fbox, cancel}
 \usepackage[utf8]{inputenc}
@@ -22,6 +23,7 @@
 \usepackage{epstopdf}
 \usepackage{matlab}
 \usepackage{enumitem}
+\usepackage{longtable, booktabs, multirow, makecell, threeparttable, ltxtable, supertabular, array}
 \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
 \allowdisplaybreaks[4]
 \begin{document}
@@ -55,7 +57,7 @@
         　　对于每日数据，我们首先指出，在数据的导入与缺失值处理上，这个数据集遇到了一些困难，对于这些问题，我们将在节\ref{数据的导入}与节\ref{数据的缺失值处理}中分别尝试解决. 下面，对每日数据的各字段（除所属大洲与时间戳外），简要分类：
         {\kaishu
         \begin{itemize}[itemsep=-1pt,topsep=1pt]
-            \item [\textbf{严重程度}:] 新增与累计病例：\texttt{new\_cases}, \texttt{total\_cases}; 住院与重症监护ICU人数：\texttt{hosp\_patients}, \texttt{icu\_} \texttt{patients}; 近七日平均检测阳性率：\texttt{positive\_rate};
+            \item [\textbf{严重程度}:] 新增与累计病例：\texttt{new\_cases}, \texttt{total\_cases}; 住院与重症监护ICU人数：\texttt{hosp\_patients}, \texttt{icu\_patients}; 近七日平均检测阳性率：\texttt{positive\_rate};
             \item [\textbf{检测能力}:] 新增与累计检测人次：\texttt{new\_tests}, \texttt{total\_tests}; 近七日平均检测阳性率：\texttt{positive\_rate};
             \item [\textbf{疫苗接种}:] 新增与累计疫苗接种人次：\texttt{new\_vaccinations}, \texttt{total\_vaccinations}; 
             \item [\textbf{管控力度}:] 政府管控力度：\texttt{stringency\_index}.
@@ -95,8 +97,8 @@
     \section{数据的导入与检索}\label{数据的导入}
         导入数据已有可以使用的\texttt{readtable}函数，且可以通过\texttt{detectImportOptions}函数，在导入数据前，预先探测并修改导入参数. 在此过程中，我们发现如下问题：
         \begin{enumerate}
-            \item [(1)] 以每日数据的\texttt{new\_vaccinations}与\texttt{total\_vaccinations}变量为例. 由于疫情发生初期长时间没有此类数据，\texttt{detectImportOptions}函数探测认为，此变量的变量类型是为\texttt{char}，因此需要手动将导入参数修改为\texttt{double}.
-            \item [(2)] 在导入每日数据时，通常最后需要检索出某个国家、某个时间段的数据，目的是形成时序数据. 但是，为此，MATLAB可以通过索引检索，但是不同类型的数据检索的方式不同，不是很便利，没有专门的检索函数可以使用.
+            \item [1.] 以每日数据的\texttt{new\_vaccinations}与\texttt{total\_vaccinations}变量为例. 由于疫情发生初期长时间没有此类数据，\texttt{detectImportOptions}函数探测认为，此变量的变量类型是为\texttt{char}，因此需要手动将导入参数修改为\texttt{double}.
+            \item [2.] 在导入每日数据时，通常最后需要检索出某个国家、某个时间段的数据，目的是形成时序数据. 为此，MATLAB可以通过括号索引检索，但是不同类型的数据检索的方式不同，不是很便利，没有专门的检索函数可以使用.
         \end{enumerate}
         为了解决上面发现的问题，并寄希望于能在单一函数中解决全部的导入与检索问题，我们利用了MATLAB的面向对象编程，编写了一个类\texttt{StatisticsAnalysis}（之所以取这个名字，是因为之后还将赋予它更多的功能）. 下面用一个例子来阐述这个类的作用. 比如，我们想要导入法国在2020年的新增与累计接种疫苗人次——
 \begin{matlabcode}
@@ -104,7 +106,7 @@ daily_SA = StatisticsAnalysis( ...
     'TablePath', './data/COVID19/daily_info.csv', ...
     'ImportOptions', { ...
         'VariableTypes', { ...
-            'new_vaccinations', 'double',
+            'new_vaccinations', 'double', ...
             'total_vaccinations', 'double' ...
             }, ...
         'SelectedVariableNames', ...
@@ -128,13 +130,58 @@ daily2 = daily_SA.Update('ImportOptions', { ...
     \section{数据的缺失值处理}\label{数据的缺失值处理}
         以每日数据为例，我们发现如下问题：
         \begin{enumerate}
-            \item [(1)] 如果要分析变量\texttt{new\_vaccinations}或\texttt{total\_vaccinations}，那么在疫情初期，有很多缺失值，可能需要填充为$0$.
-            \item [(2)] 变量\texttt{new\_cases}可能会出现意外的缺失值，但能从\texttt{total\_cases}变量中恢复.
-            \item [(3)] 一些国家的数据，可能由于更正数据的需要，部分日期的\texttt{total\_cases}会比上一日的少，以致当日的\texttt{new\_cases}成为缺失值.
-            \item [(4)] 一些不能恢复的变量，可能需要线性插值，或者其他的方法连接.
-            \item [(5)] 在统计上不可避免出现一些随机波动，可能需要光滑处理.
+            \item [1.] 在疫情发展初期，一些变量有很多缺失值，可以删除行，一些情况下也可以填充为$0$.
+            \item [2.] 多个变量体现出了「新增-累计」的特征，如每日新增病例与累计病例、每日新增接种人次与累计接种人次，这些数据会有意外的缺失值，分为以下几种情况：
+                \begin{enumerate}
+                    \item [(1)] 数值意外地未被记录，但是可以从其周围的数据中恢复；
+                    \item [(2)] 某日的新增数据为零，与近几日数据不相符合，可以认为是离群值；这种情况认为是统计滞后引起的，可以通过近几日的平均来进行光滑，也可以不作改动.
+                    \item [(3)] 某日的总量数据比前一日乃至前几日的总量数据要少，使得当日的新增数据被记录为缺失值；这种情况认为是统计更正引起的，由于不知道这些多被记录的数据的分布情况，不能准确地作出修改.
+                    
+                    {\kaishu 我们认为此种情况可以有多种处理方式，这里列举两种：(1-)根据模型的选择，可以不作修改，直接将当日新增数据记录为负值；(2-)选取窗口进行光滑，用近几日数据的平均等统计数字记录当日的新增数据，计算前一日至当日的差值，指数衰减地分配到当日的前几日之前. （之所以使用衰减的分配，我们隐含了一种假设，即数据更正多是发生在案例数快速增长的时期，此时可能因为统计口径的原因多记录了一些案例，这些案例应当更可能分布在时间较近的时刻. 之所以分配到几日之前，我们隐含假设统计和统计更正本身需要时间.）}
+                \end{enumerate}
         \end{enumerate}
-        为了解决这些问题，我们编写了一个函数\texttt{tableMissingValuesHelper.m}，可以用来分析缺失值的分布，在这之后再经过人工判断，可以选择不同的参数，以恢复数据. 更多关于这个函数的信息，请参见附录\ref{app:tableMissingValuesHelper}. 
+        为了解决这些问题，我们编写了\texttt{TableMissingValues.m}，可以用来分析缺失值的分布，在这之后再经过人工判断，可以选择不同的参数，以恢复数据. 我们也将这个功能整合到了类\texttt{StatisticsAnalysis}中. 下面举一个例子来阐述其用法. 例如对法国在2020年的新增与累计病例数进行缺失值处理，我们只需在上文的基础上——
+\begin{spacing}{0.7}
+\begin{matlabcode}
+daily_SA.MissingValuesReport
+\end{matlabcode}
+\begin{matlaboutput}
+ans = 
+        Map: [343x3 logical]
+       date: {}
+  new_cases: {[72 72] [75 75] [91 91] [97 97] [122 122] [131 132] [157 157] [286 286]}
+total_cases: {}
+\end{matlaboutput}
+\end{spacing}
+可见数据中只有新增数据缺失，接着——
+\begin{matlabcode}
+MissingValuesOptions = { {'new_cases', 'total_cases'}, 'Increment-Addition', ...
+        {'InterpolationStyle','LinearRound', ...
+        'RemoveFirstRows',false,'RemoveLastRows',false}
+    };
+daily2 = daily_SA.Update('MissingValuesOptions', MVO).TimeTable;
+\end{matlabcode}
+这里缺省使用了上文所述的指数衰减，因为其总量数据不单调. 更多的缺失值信息可以通过下面的方法获取——
+\begin{spacing}{0.7}
+\begin{matlabcode}
+daily_SA.MissingValuesReport.increment_addition_new_cases_total_cases
+\end{matlabcode}
+\begin{matlaboutput}
+ans = 
+          Increment: 'new_cases'
+           Addition: 'total_cases'
+     IncrementWhere: [0 1 0]
+      AdditionWhere: [0 0 1]
+IncrementMissingMap: [343x1 logical]
+ AdditionMissingMap: [343x1 logical]
+ DecreasingAddition: {[71 72] [74 75] [90 91] [96 97] [121 122] [130 131] 
+                      [131 132] [156 157] [285 286]}
+      MissingBlocks: [8x1 struct]
+    tpMissingBlocks: [8x1 struct]
+ MissingBlocksGroup: [8x1 struct]
+\end{matlaboutput}
+\end{spacing}
+另外，自定义的插值、衰减函数可以通过参数用函数句柄导入. 更多的信息请参见附录\ref{app:StatisticsAnalysis}. 
     \section{数据分析过程}\label{数据分析}
     \subsection{一般的统计指标}\label{一般的统计指标}
     \subsection{聚类分析}
@@ -142,47 +189,103 @@ daily2 = daily_SA.Update('ImportOptions', { ...
     \newpage
     \appendix
     \section{\texttt{StatisticsAnalysis}类}\label{app:StatisticsAnalysis}
-    　　本类存储在\texttt{./functions/@StatisticsAnalysis}.本类目前有两个功能，一是数据的导入与检索，二是对表格进行初步的统计分析，即计算传入的或预设的统计指标. 
+    　　详见github仓库，网址\url{https://github.com/maix00/StatisticsAnalysis}. 本类存储在\texttt{./functions/@StatisticsAnalysis}. 本类目前有如下功能：
+    \begin{enumerate}
+        \item [1.] \textbf{修改导入参数，并导入表格}；
+        
+        {\kaishu 
+        修改导入参数，请使用\texttt{ImportOptions}参数，类型可以是\texttt{struct}或采用name/value-pair的\texttt{cell}；name应当是你所要修改的\texttt{detectImportOptions}中得到的属性. 
+        
+        　　另外，如果有设置多个导入参数的需要，请将值置于\texttt{1x1 cell}，比如导入第$3\sim 10$及$20\sim 30$行，则为\texttt{DataLines:\{\{[3 10] [20 30]\}\}}.
+        }
+        \item [2.] \textbf{检索表格}；
+        
+        {\kaishu
+        传入检索参数，请使用\texttt{SelectTableOptions}，类型可以是\texttt{struct}或采用name/value-pair的\texttt{cell}；name应当是你所要检索的变量名.
 
-    　　\texttt{StatisticsAnalysis}生成函数，主要的参数包括\texttt{ImportOptions}，\texttt{SelectTableOptions}和\texttt{TagsGenerateOptions}. 其实现的主要过程见下.
-\begin{matlabcode}
-TablePath作为参数被传入时——
-Step 1: detectImportOptions
-Step 2: 导入与检索表格
-    Step (1): 用ImportOptions，修改detectImportOptions，并导入表格
-    Step (2): 引用./function/selecttable.m函数检索表格
-    Step (3): 去除多余的列
-Step 3: 添加变量标签Tag
-        并将标签对应的统计指标添加到Table.Properties.CustomProperties
-    Step (1): 引用类方法TagsGenerate以生成标签、计算统计指标
-    Step (2): 引用addprop函数，将统计指标添加到..CustomProperties
-\end{matlabcode}
-\begin{matlabcode}
-Table作为参数被传入时——
-Step 1: 检索表格
-    if SelectTableOptions非空
-        引用./function/selecttable.m函数检索表格
-    end
-Step 2: 添加变量标签Tag
-        并将标签对应的统计指标添加到Table.Properties.CustomProperties
-    Step (1): 引用类方法TagsGenerate以生成标签、计算统计指标
-    Step (2): 引用addprop函数，将统计指标添加到..CustomProperties
-\end{matlabcode}
-    其中，各种\texttt{Options}参数，可以是\texttt{struct}类型，也可以是先选项名、后选项值的\texttt{cell}类型. 可以参见节\ref{数据的导入}中的例子.
+        　　导入与检索后的表格，可以通过属性名\texttt{Table}或\texttt{TimeTable}访问. 访问原表格请使用属性名\texttt{WholeTable}. 
+        }
+        \item [3.] \textbf{缺失值探测、修正}；
+        
+        {\kaishu
+        传入修正缺失值的参数，请使用\texttt{MissingValuesOptions}，类型可以是\texttt{struct}或\texttt{N\_} \texttt{by\_3 cell}. 传入\texttt{cell}时，每行第一位是涉及的变量名\texttt{VariableNames}，第二位是使用的修正方法\texttt{Style}，第三位是该修正方法所需要的其他参数，类型可以是\texttt{struct}或者采用name/value-pair的\texttt{cell}.
 
-    　　\texttt{ImportOptions}所接受的选项名与选项值，请参考\texttt{detectImportOptions}中列明的属性名与属性值.
+        　　查看探测信息，请使用属性名\texttt{MissingValuesReport}. 缺失值修正后的表格将覆盖掉\texttt{obj.Table}. 此外，允许的参数值如下表所示：
+        \vspace{-2em}
+        \begin{flushleft}
+        \begin{tabular*}{\textwidth}[H]{c|l|l}
+            修正方法&参数名&允许参数值\\ \hline
+            \texttt{MissingDetect}&——&——\\ \hline
+            \multirow{11}{*}{
+                \makecell{\\
+                \texttt{Increment-}\\\texttt{Addition}
+                }
+            }
+            &\texttt{RemoveLastRows}
+            &缺省\texttt{true}\\ \cline{2-3}
+            &\texttt{ConstantValues\_FirstRows}
+            &缺省空\\
+            &\texttt{RemoveFirstRows}
+            &缺省\texttt{true}\\ \cline{2-3}
+            &\texttt{InterpolationStyle}
+            &\multirow{6}{*}{
+                \makecell{
+                \texttt{Style}缺省\texttt{"Linear"}或\\\texttt{"LinearRound"}，
+                允许函数名\\字符串如\texttt{"spline"}；\\\texttt{Function}允许函数句柄.
+                }
+            }\\
+            &\texttt{InterpolationFunction}
+            &\\
+            &\texttt{InterpolationStyle\_P}
+            &\\
+            &\texttt{InterpolationFunction\_P}
+            &\\
+            &\texttt{InterpolationStyle\_C}
+            &\\
+            &\texttt{InterpolationFunction\_C}
+            &\\ \cline{2-3}
+            &\texttt{DecreasingAdditionStyle}
+            &\multirow{2}{*}{
+                \makecell{\texttt{Style}缺省\texttt{"Exponential"}，允许\\\texttt{"LinearScale"}, \texttt{"DoNothing"}.}
+            }\\
+            &\texttt{DecreasingAdditionParameters}
+            &\\
+            \hline
+            \multirow{2}{*}{
+                \makecell{
+                \texttt{Interpolation}
+                }
+            }
+            &\texttt{InterpolationStyle}
+            &\\
+            &\texttt{InterpolationFunction}
+            &\\\hline
+            \texttt{ConstantValues}
+            &\texttt{ConstantValues}
+            &缺省空
+        \end{tabular*}
+        \end{flushleft}
 
-    　　\texttt{SelectTableOptions}所接受的选项名，须是表格的列名，所接受的选项值，可以是单一的值，可以是\texttt{timerange}类型，也可以是\texttt{./functions/@arange}.
+        其中，函数句柄句法、相关参数有
+        \begin{enumerate}
+            \item [(1-)]\texttt{T = InterpolationFunction(T, startRow, endRow, VariableMap);}
+            \item [(2-)]\texttt{T = InterpolationFunction\_C(T, startRow, endRow, IncrementWhere, Ad-}\\\texttt{ditionWhere);} 注：新增-累计类数据会有两种需要插值的情况，记为$P$与$C$.
+            \item [(3-)] 非单调累计数据处理方法\texttt{"Exponential"}的参数较多，包括RoundingWindowAhead, RoundingWindowBehind, RoundingStrategy, RoundingScale, ExponentialRate, AcceptedRatioMinimum, AcceptedRatioMaximum, SpanAheadSkip.
+        \end{enumerate}
+        }
+        
+        \item [4.] \textbf{给不同变量贴上不同标签，并对不同标签的变量，计算传入或预设的统计指标，并将计算结果添加到\texttt{Table.Properties.CustomProperties}}.
+        
+        {\kaishu
+        传入标签与统计指标的参数，请使用\texttt{TagsGenerateOptions}，类型可以是\texttt{struct}或\texttt{cell}；\texttt{struct}的域名，或者\texttt{cell}的左列，应当是函数\texttt{./function/@StatisticsAna-} \texttt{lysis/TagsGenerate}的参数名，包括
+        \begin{itemize}[itemsep=-1pt,topsep=1pt]
+            \item \texttt{CustomTagName}，例如\texttt{\{"continuous", [0 1 1]\}};
+            \item \texttt{CustomTagFunction}，例如\texttt{\{"continuous", "variance", @(x,y)tsnanvar(x)\}}，其中\texttt{x}和\texttt{y}分别是变量所在列全体，及其去重无缺全体.
+        \end{itemize} 
+        }
+    \end{enumerate}
 
-    　　前两种\texttt{Options}中，多个选项值可以\texttt{array}或\texttt{1x1 cell}的形式传入，不同的选项值将分别用于表格的导入、检索，最后尽可能地上下拼合表格.
+    注：检索功能引用了\texttt{./function/selecttable.m}与MATLAB内置类\texttt{timerange}，缺失值修正引用了\texttt{./function/@TableMissingValues}. 更新各种参数可以使用类方法\texttt{Update}.
 
-    　　\texttt{TagsGenerateOptions}所接受的选项名，主要的即\texttt{CustomTagName}和\texttt{CustomTagFunction}，前者给表格的列赋予标签、后者给不同的标签赋予统计指标（函数句柄）. 预设的变量标签、预设的统计指标，以及参数的格式，可以用\texttt{help}查看.
-
-    　　类方法中比较实用的有\texttt{TagsGenerate}与\texttt{Update}，前者用作统计分析，后者用来更新各种\texttt{Options}参数.
-
-    \section{\texttt{selecttable}函数}\label{app:selecttable}
-    本函数存储在\texttt{./functions}.
-    \section{\texttt{tableMissingValuesHelper}函数}\label{app:tableMissingValuesHelper}
-    本函数存储在\texttt{./functions}.
     \section{利用有关数据可以进行的可视化}
 \end{document}
