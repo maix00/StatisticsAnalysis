@@ -1,21 +1,6 @@
 \documentclass[a4paper, titlepage]{article}
-%\usepackage{HYY_style}
-\usepackage{amsmath,amsfonts,amssymb,amsthm,bm,extarrows,mathrsfs,dutchcal}
-\usepackage{ctex}%中文支持
-\usepackage{geometry}%页面布局
-	\geometry{top=25mm,bottom=25mm,left=30mm,right=30mm}%页面布局
-	\setlength\parindent{2em}% 每行缩进两个汉字
-	\setmainfont{Times New Roman}% 设置字体
-	%\setmonofont{Courier New}
-	\setsansfont{Arial}
-	\setCJKfamilyfont{kai}[AutoFakeBold]{simkai.ttf}
-	\newcommand*{\kai}{\CJKfamily{kai}}
-	\setCJKfamilyfont{song}[AutoFakeBold]{SimSun}
-	\newcommand*{\song}{\CJKfamily{song}}
-\usepackage{xcolor}%颜色
-\usepackage{graphicx}%图片
-\usepackage{setspace}
-% \usepackage{setspace, changepage, enumitem, verbatim}
+\usepackage{HYY_style}
+\usepackage{setspace, changepage, enumitem, verbatim}
 % \usepackage{tikz, fbox, cancel}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
@@ -23,9 +8,10 @@
 \usepackage{epstopdf}
 \usepackage{matlab}
 \usepackage{enumitem}
-\usepackage{longtable, booktabs, multirow, makecell, threeparttable, ltxtable, supertabular, array}
+\usepackage{longtable, booktabs, multirow, makecell, threeparttable, ltxtable, supertabular, array, float}
 \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
 \allowdisplaybreaks[4]
+\geometry{top=25mm,bottom=25mm,left=30mm,right=30mm}
 \begin{document}
     \renewcommand{\thefootnote}{\fnsymbol{footnote}}
     \title{{\small《MATLAB程序设计》大作业个人汇报}\\COVID-19疫情数据的简要统计分析与预测\footnotemark[1]}
@@ -34,73 +20,126 @@
     \footnotetext[1]{\kaishu 相关代码及其版本演进托管在\url{https://github.com/maix00/StatisticsAnalysis}.}
     \maketitle
     \renewcommand{\thefootnote}{\araboc{footnote}}
-    \renewcommand{\contentsname}{\centering 目录}
+    \thispagestyle{empty}
+    \renewcommand{\contentsname}{\centering 目录\\\quad\\}
     \tableofcontents
+    \thispagestyle{empty}
+    \newpage
+    \pagestyle{headings}
+   
 
-    \section{整体分析思路与代码分工}
+    \section{整体分析思路}
         　　众所周知，2019年底开始的COVID-19疫情给人们的生产生活造成了极大的影响，如何利用疫情相关数据、如何通过数据挖掘、分析、预测，以指导人们作出更加有利于社会发展的决策，是当今较为热门的研究方向. 在此，我们将根据所给的有关数据，尽可能地贴合这个目的，做出一些简要的分析与预测.
 
         \subsection{数据观察与简要分析}
-        　　首先，观察所给数据. 有两个数据集，一个是\texttt{country.csv}（以下称「国家数据」），另一个是\texttt{daily\_info.csv}（以下称「每日数据」）. 每日数据中包括$21$个国家的有关数据，其中Senegal在国家数据中有数据缺失，遂只对余下$20$个国家进行分析，分别是Australia, Canada, Chile, China, Egypt, Ethiopia, France, Germany, Hungary, Iceland, Japan, Malaysia, Saudi Arabia, South Africa, South Korea, Sweden, Thailand, United States, 以及Zimbabwe. 
-
-        　　这$20$个国家的国家数据中，每个国家都有$12$个特征，简要分类：
+        　　首先，观察所给数据. 有两个数据集，一个是\texttt{country.csv}（以下称「国家数据」），另一个是\texttt{daily\_info.csv}（以下称「每日数据」）. 
+        \subsubsection*{国家数据}
+        　　国家数据中共有$229$条数据，每个国家最多有$12$个特征，简要分类：
+        \vspace{5pt}
+        \begin{adjustwidth}{1cm}{0cm}
         {\kaishu
-        \begin{itemize}[itemsep=-1pt,topsep=1pt]
-            \item [\textbf{地理位置}:]所属大洲\texttt{continent}；
-            \item [\textbf{人口成分}:]人口\texttt{population}, 每平方千米人口密度\texttt{population\_density}, 中位年龄\texttt{median\_age}, $65$岁以上人口占比\texttt{aged\_65\_older}, $70$岁以上人口占比\texttt{aged\_70\_older}；
-            \item [\textbf{经济环境}:]按购买力平价的人均国民生产总值\texttt{gdp\_per\_capita}；
-            \item [\textbf{卫生水平}:]男性吸烟率\texttt{male\_smokers}, 女性吸烟率\texttt{female\_smokers}, 每年每十万人心血管疾病死亡率\texttt{cardiovasc\_death\_rate}, 每千人床位数\texttt{hospital\_beds\_per\_thousands}, 预期寿命\texttt{life\_} \texttt{expectancy}.
+        \begin{itemize}[itemsep=-1pt]
+            \item [\textbf{地理位置}:]
+                所属大洲　　　　　　　　　　　　　　　\texttt{continent}
+            \item [\textbf{人口成分}:]
+                人口　　　　　　　　　　　　　　　　　\texttt{population}\\ 
+                每平方千米人口密度　　　　　　　　　　\texttt{population\_density}; \\
+                中位年龄　　　　　　　　　　　　　　　\texttt{median\_age}\\
+                $65$岁以上人口占比　　　　　　　　　　\hspace{1.1em}\texttt{aged\_65\_older}\\
+                $70$岁以上人口占比　　　　　　　　　　\hspace{1.1em}\texttt{aged\_70\_older}
+            \item [\textbf{经济环境}:]
+                按购买力平价的人均国民生产总值　　　　\texttt{gdp\_per\_capita}
+            \item [\textbf{卫生水平}:]
+                男性吸烟率　　　　　　　　　　　　　　\texttt{male\_smokers}\\ 
+                女性吸烟率　　　　　　　　　　　　　　\texttt{female\_smokers}\\ 
+                每年每十万人心血管疾病死亡率　　　　　\texttt{cardiovasc\_death\_rate}\\ 
+                每千人床位数　　　　　　　　　　　　　\texttt{hospital\_beds\_per\_thousands}\\ 
+                预期寿命　　　　　　　　　　　　　　　\texttt{life\_expectancy}
         \end{itemize}
         }
-        据此，我们可以对这些国家进行无监督聚类分析，在每一类中选取一个代表性的国家构建一分析预测模型（利用每日数据和/或国家特征），并对同一类中的其他国家验证该模型的有效性. 但是，需要指出，因为所给数据的有限性，所建立或选择的模型是有限的，这里的特征作为模型参数的个数也是有限的，因此这里的多数特征在本文中只能用于聚类.
+        \end{adjustwidth}
+        \vspace{5pt}
+        根据这些特征数据，我们可以对这些国家进行无监督聚类分析，但需要事先对缺失值进行处理（见节\ref{数据的缺失值处理}）. 此后，我们可以在每一类中选取一个代表性的国家构建一分析预测模型（利用每日数据和/或国家特征），并可对同一类中的其他国家验证该模型的有效性. 这是本文开展分析的\textbf{第一种路径}.
+        
+        　　但是，需要预先指出如下两点：
+        \begin{enumerate}[itemsep=-2pt,topsep=1pt]
+            \item [(1)] 因为所给数据的有限性，所能建立或选择的模型是有限的，这里的特征作为模型参数的个数也是有限的，因此这里的多数特征在本文中只能用于聚类.
+            \item [(2)] 某个国家其疫情的发展特征，可能与这里列明的某个特征相关性较低，此时，如果这个特征对上述的聚类分析产生过较大的影响，那么最终所获得分析预测模型，可能将不适用于该国所在类的其他国家.
+        \end{enumerate}
+        我们将在随后的数据分析中考虑这些问题，酌情选取模型.
 
-        　　对于每日数据，我们首先指出，在数据的导入与缺失值处理上，这个数据集遇到了一些困难，对于这些问题，我们将在节\ref{数据的导入}与节\ref{数据的缺失值处理}中分别尝试解决. 下面，对每日数据的各字段（除所属大洲与时间戳外），简要分类：
+        \subsubsection*{每日数据}
+        　　对于每日数据，我们首先指出，对于其数据导入与缺失值处理上遇到的问题，我们将在节\ref{数据的导入}与节\ref{数据的缺失值处理}中分别尝试解决. 下面，对每日数据的各字段（除所属大洲与时间戳外），简要分类：
+        \vspace{5pt}
+        \begin{adjustwidth}{1cm}{0cm}
         {\kaishu
         \begin{itemize}[itemsep=-1pt,topsep=1pt]
-            \item [\textbf{严重程度}:] 新增与累计病例：\texttt{new\_cases}, \texttt{total\_cases}; 住院与重症监护ICU人数：\texttt{hosp\_patients}, \texttt{icu\_patients}; 近七日平均检测阳性率：\texttt{positive\_rate};
-            \item [\textbf{检测能力}:] 新增与累计检测人次：\texttt{new\_tests}, \texttt{total\_tests}; 近七日平均检测阳性率：\texttt{positive\_rate};
-            \item [\textbf{疫苗接种}:] 新增与累计疫苗接种人次：\texttt{new\_vaccinations}, \texttt{total\_vaccinations}; 
-            \item [\textbf{管控力度}:] 政府管控力度：\texttt{stringency\_index}.
+            \item [\textbf{严重程度}:] 
+                新增与累计病例　　　　　　　　\texttt{new\_cases}, \texttt{total\_cases}\\
+                住院与重症监护ICU人数　　　\hspace{1em}\texttt{hosp\_patients}, \texttt{icu\_patients}\\
+                近七日平均检测阳性率　　　　　\texttt{positive\_rate}
+            \item [\textbf{检测能力}:]
+                新增与累计检测人次　　　　　　\texttt{new\_tests}, \texttt{total\_tests}\\
+                近七日平均检测阳性率　　　　　\texttt{positive\_rate}
+            \item [\textbf{疫苗接种}:] 
+                新增与累计疫苗接种人次　　　　\texttt{new\_vaccinations}, \texttt{total\_vaccinations}
+            \item [\textbf{管控力度}:] 
+                政府管控力度　　　　　　　　　\texttt{stringency\_index}
         \end{itemize}
         }
-        这些时间序列数据，(1)可以用来构建一分析预测模型，(2)也可以取某一时间段内的最大、平均等统计指标（时间序列特征），用来对不同国家进行监督或无监督聚类分析. 这里的聚类分析，得到的是不同国家的不同疫情发展模式，与前面的利用国家数据得到的关于国家特性的聚类不同.
+        \end{adjustwidth}
+        \vspace{5pt}
+        这些时间序列数据，(1)可以用来构建一分析预测模型，(2)也可以取某一时间段内的最大、平均等统计指标（时间序列特征），用来对不同国家进行无监督聚类分析. 这里的聚类分析，得到的是不同国家的不同疫情发展模式，与前面的利用国家数据得到的关于国家特性的聚类不同. 针对不同的发展模式，可以提出更有针对性的建议，这是本文开展分析的\textbf{第二种路径}.
 
-        　　另外，需要指出，因为所给数据的有限性，所能建立或选择的分析预测模型是极其有限的，比如，由于缺少治愈、死亡数据，不能采用传统的传染病模型SIR至SEIR等，又比如，由于缺少流调数据，无法统计计算基本再生数$R_0$、潜伏期平均长度$\bar{T_L}$等与传染病有关的统计指标. 此外，正因为所能建立或选择的模型是有限的，每日数据中的一些字段在本文中可能不会被用到.
+        　　另外，需要预先指出，因为所给数据的有限性，所能建立或选择的分析预测模型是极其有限的，比如，由于缺少治愈、死亡数据，不能采用传统的传染病模型SIR至SEIR等，又比如，由于缺少流调数据，无法统计计算基本再生数$R_0$、潜伏期平均长度$\bar{T_L}$等与传染病有关的统计指标. 
 
         \subsection{整体分析思路}
-        　　综合上面的简要分析，我们将本文的整体分析思路概括如下.
+        　　综合上面的简要分析，我们将本文的整体分析思路概括如下. 首先，我们将利用自回归与偏自回归分析，对疫情的长期发展趋势给出一个简要说明. 其次，我们将遵循以下两种不同的路径对疫情的短期性特征展开分析.
 
-        \paragraph{\fbox{第一种路径}} 根据国家特征进行聚类，而后利用代表国家的每日数据构造一分析预测模型.
+        \paragraph{\fbox{第一种路径}} \textbf{基于LSTM神经网络模型的预测分析}
+        \vspace{5pt}
+        \begin{adjustwidth}{1cm}{0cm}
+        {\kaishu
         \begin{itemize}[itemsep=-1pt,topsep=1pt]
-            \item [\textbf{第一步}:]（聚类分析）对$20$个国家的特征数据，先进行主成分分析，选取前$5$个主特征后进行$5$-mean聚类分析.
-            \item [\textbf{第二步}:]（构建模型）基于LSTM神经网络模型，对代表国家一定时期内的每日新增病例数据进行学习.
+            \item [\textbf{第一步}:]（聚类分析）利用聚类方法，对国家数据进行缺失值处理，并进一步开展聚类分析.
+            \item [\textbf{第二步}:]（构建模型）对每日数据，基于LSTM神经网络模型，对代表国家一定时期内的每日病例数据进行学习.
             \item [\textbf{第三步}:]（预测检验）利用上一步得到的模型，对时期外的数据进行预测检验，并对同一类中的其他国家的数据进行预测检验.
         \end{itemize}
-        此路径能得到一种基于LSTM神经网络的分析预测模型.
-
-        \paragraph{\fbox{第二种路径}} 根据每日数据和/或国家数据构造时间序列特征，而后进行谱系聚类.
-        \begin{itemize}[itemsep=-1pt,topsep=1pt]
-            \item [\textbf{第一步}:]（构造特征）
-            \item [\textbf{第二步}:]（聚类分析）
-        \end{itemize}
-        此路径能对不同国家的疫情发展模式进行分类，针对分类结果可以提出更有针对性的抑制疫情发展的建议. \url{https://www.it610.com/article/1515470890224123904.htm}.
+        }
+        \end{adjustwidth}
+        \vspace{5pt}
         
-        \paragraph{\fbox{第三种路径}} 拟合部分国家疫情发展初期缺失的数据.
-
+        \paragraph{\fbox{第二种路径}} \textbf{基于时间序列特征的谱系聚类}
+        \vspace{5pt}
+        \begin{adjustwidth}{1cm}{0cm}
+        {\kaishu
+        \begin{itemize}[itemsep=-1pt,topsep=1pt]
+            \item [\textbf{第一步}:]（构造特征）划定区间，对每日数据进行缺失值处理，并进一步获取时间序列特征.
+            \item [\textbf{第二步}:]（聚类分析）根据以上时间序列特征，进行谱系聚类.
+            \item [\textbf{第三步}:]（政策建议）对具有不同疫情发展特征的国家，尝试作出政策建议.
+        \end{itemize}
+        }
+        \end{adjustwidth}
+        \vspace{5pt}
         \url{https://www.it610.com/article/1515470890224123904.htm}.
 
-        \subsection{代码分工}
-        　　因为疫情的关系，我们两位同学，不得不线上联系，我们也因此第一次尝试使用github平台. 仓库网址为\url{https://github.com/maix00/StatisticsAnalysis}. 有关代码分工的详细情况，在平台上可以清晰看到，这里就作简单介绍.
+        \subsection{说明}
+        　　因为疫情的关系，我们两位同学，不得不线上联系，我们也因此第一次尝试使用github平台. 仓库网址为\url{https://github.com/maix00/StatisticsAnalysis}. 在那里，我们利用MATLAB的面向对象编程，编写了一个类\texttt{StatisticsAnalysis}，用于辅助导入数据、检索表格、缺失值处理等，这在本文中会被用到，用到时我们会详细说明.
 
-        　　节\ref{数据的导入}与节\ref{数据的缺失值处理}数据导入、缺失值处理的有关代码主要是由王逸扬同学完成的，节\ref{数据分析}数据分析的有关代码主要是由杨耕智同学完成的.
+        　　本文的第\ref{数据的导入}节、第\ref{数据的缺失值处理}节将分别涉及数据的导入与缺失值处理中遇到的问题；第\ref{自相关分析}节进行自相关分析；第节、第节分别涉及上述两种不同路径的分析. 
+        
+        　　附录部分，附录\ref{app:StatisticsAnalysis}给出关于类\texttt{StatisticsAnalysis}的详细说明，附录探索其他可能的数据可视化.
 
+        　　祝阅读愉快！
+    
+    \newpage
     \section{数据的导入与检索}\label{数据的导入}
         导入数据已有可以使用的\texttt{readtable}函数，且可以通过\texttt{detectImportOptions}函数，在导入数据前，预先探测并修改导入参数. 在此过程中，我们发现如下问题：
         \begin{enumerate}
             \item [1.] 以每日数据的\texttt{new\_vaccinations}与\texttt{total\_vaccinations}变量为例. 由于疫情发生初期长时间没有此类数据，\texttt{detectImportOptions}函数探测认为，此变量的变量类型是为\texttt{char}，因此需要手动将导入参数修改为\texttt{double}.
             \item [2.] 在导入每日数据时，通常最后需要检索出某个国家、某个时间段的数据，目的是形成时序数据. 为此，MATLAB可以通过括号索引检索，但是不同类型的数据检索的方式不同，不是很便利，没有专门的检索函数可以使用.
         \end{enumerate}
-        为了解决上面发现的问题，并寄希望于能在单一函数中解决全部的导入与检索问题，我们利用了MATLAB的面向对象编程，编写了一个类\texttt{StatisticsAnalysis}（之所以取这个名字，是因为之后还将赋予它更多的功能）. 下面用一个例子来阐述这个类的作用. 比如，我们想要导入法国在2020年的新增与累计接种疫苗人次——
+        为了解决上面发现的问题，并寄希望于能在单一函数中解决全部的导入与检索问题，我们利用MATLAB面向对象变成，编写了类\texttt{StatisticsAnalysis}. 比如，我们想要导入法国在2020年的新增与累计接种疫苗人次——
 \begin{matlabcode}
 daily_SA = StatisticsAnalysis( ...
     'TablePath', './data/COVID19/daily_info.csv', ...
@@ -119,7 +158,7 @@ daily_SA = StatisticsAnalysis( ...
     );
 daily = daily_SA.TimeTable;
 \end{matlabcode}
-        其中，\texttt{"TablePath"}、\texttt{"ImportOptions"}和\texttt{"SelectTableOptions"}是函数参数名，\texttt{TimeTable}是该类的一个属性. 如果我们还想导入法国在2020年的新增与累计病例数，我们只需——
+        其中，\texttt{TablePath}、\texttt{ImportOptions}和\texttt{SelectTableOptions}是函数参数名，\texttt{TimeTable}是该类的一个属性. 如果我们还想导入法国在2020年的新增与累计病例数，我们只需——
 \begin{matlabcode}
 daily2 = daily_SA.Update('ImportOptions', { ...
         'SelectedVariableNames', {'date', 'new_cases', 'total_cases'} ...
@@ -127,8 +166,13 @@ daily2 = daily_SA.Update('ImportOptions', { ...
     ).TimeTable;
 \end{matlabcode}
         上面的方法不会重复导入、检索数据. 更多关于这个类的信息，请参见附录\ref{app:StatisticsAnalysis}. 
+
+    \newpage
     \section{数据的缺失值处理}\label{数据的缺失值处理}
-        以每日数据为例，我们发现如下问题：
+        \subsection{对国家数据的缺失值探测、处理}
+        \subsection{对每日数据的缺失值探测、处理}
+        \subsubsection{问题的发现与解决}
+        在每日数据中，我们发现如下问题：
         \begin{enumerate}
             \item [1.] 在疫情发展初期，一些变量有很多缺失值，可以删除行，一些情况下也可以填充为$0$.
             \item [2.] 多个变量体现出了「新增-累计」的特征，如每日新增病例与累计病例、每日新增接种人次与累计接种人次，这些数据会有意外的缺失值，分为以下几种情况：
@@ -182,10 +226,89 @@ IncrementMissingMap: [343x1 logical]
 \end{matlaboutput}
 \end{spacing}
 另外，自定义的插值、衰减函数可以通过参数用函数句柄导入. 更多的信息请参见附录\ref{app:StatisticsAnalysis}. 
-    \section{数据分析过程}\label{数据分析}
-    \subsection{一般的统计指标}\label{一般的统计指标}
-    \subsection{聚类分析}
-    \subsection{疫情数据的分析预测}
+    \subsubsection{缺失值探测与处理报告}
+    
+    \newpage
+    %https://max.book118.com/html/2021/0813/6110100143003231.shtm
+    \section{长期性分析（自相关分析与周期性特征）}\label{自相关分析}
+        　　在这一节，我们尝试解答以下疑问：
+        \begin{enumerate}
+            \item [1.] COVID-19每日新增病例数据，究竟是一种怎样的时间序列数据？
+            \item [2.] 最近有研究指出，SARS-CoV-2更具传染力的新毒株，似乎呈现每隔半年出现一次的周期性，接近其他一些传染病周期性爆发的趋势，这是否能从以上数据中得到某种预见？
+        \end{enumerate}
+        
+        　　首先，我们必须指出，如果采取十分严厉的管控措施，任何传染病的周期性特征都是可以被人为破坏的，但在目前COVID-19仍旧在世界各地相当盛行的当下，这种可能的周期性是不能被直接排除的选项.
+
+        　　下面，为了解答上面的疑问，我们以法国的新增病例数据为例，检索部分时段的数据，进行随机性与平稳性检验，以及自回归（ACF）与偏自回归（PACF）分析. 
+
+        \subsection{随机性与平稳性检验}
+        首先，可视化出所能获得的全部新增病例数据.\\
+\begin{minipage}{\textwidth}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{./images/France_Whole.png}
+    \vspace{-3em}
+    \caption{法国的全体新增病例数据}
+    \label{images:France_Whole}
+\end{figure}
+\end{minipage}\\\quad\\
+从该原始序列的波动变化可以看出，
+\begin{enumerate}[itemsep=-2pt,topsep=1pt]
+    \item [(1)] 每日新增病例数不是纯随机的；{\kaishu 在MATLAB中，验证非随机性，可以使用\texttt{lbqtest}函数，它使用了Ljung-Box Q统计量；}
+    \item [(2)] 长期来看，每日新增病例数总是会有回到$0$的趋势，因此将是平稳的；但短期来看，在病例增长与回落过程中具有趋势性，非平稳；{\kaishu 在MATLAB中，验证平稳性，可以使用内置函数\texttt{adftest}, \texttt{pptest}, \texttt{kpsstest}等检验方式，各自的意义有所不同.}
+    \item [(3)] 可能具有长短两种周期性，较短的周期性也可能是由统计方法引起的噪声；{\kaishu 在MATLAB中，进一步的分析将用到后文将使用到的函数\texttt{autocorr}和\texttt{parcorr}.}
+\end{enumerate}
+
+    \subsection{自相关分析}
+    　　自相关函数指当日数据与某个时滞数据间的Pearson相关系数，可以理解为当日对某个时滞日间通过各种路径造成的影响力.
+
+    　　选取第$200$至第$600$条数据，即2020年8月10日至2021年9月14日的数据，利用内置函数\texttt{autocorr}，选取较长的时滞期，计算其自回归值，作图如下：\\
+    \begin{minipage}{\textwidth}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\textwidth]{./images/France_ACF.png}
+            \vspace{-3em}
+            \caption{法国在一定时期内的自回归值随时滞的变化情况}
+            \label{images:France_ACF}
+        \end{figure}
+    \end{minipage}\\\quad\\
+    自相关ACF图呈现波动衰减趋势：(1-) 每隔$150$天左右的时滞，就会出现一个波峰或波谷，它们周期性地逼近乃至突破二倍标准误差带，这暗示新增病例数据可能存在一个$150$天左右的波动周期；(2-) 另外，波动呈现衰减趋势，这暗示可能存在更大的周期；(3-) 波动周期似乎具有缩小的趋势. 但是，也需注意，这里的波峰波谷没有「显著」突破二倍标准误差带，说明其置信仍有待商榷. {\kaishu 注：之所以不选用更临近的数据，是因为临近数据（2022年初）处在病例快速增长期，更具趋势性，会使得ACF图显著拖尾.}
+
+    \subsection{偏自相关分析}
+    　　偏自相关函数可以理解为当日对某个时滞日间通过直接路径造成的影响力，而剔除了其他通过依赖关系造成的影响力. 现在，选用全部数据，利用内置函数\texttt{parcorr}，选取较长的时滞期，计算其偏自回归值，作图如下：\\
+\begin{minipage}{\textwidth}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\textwidth]{./images/France_PACF.png}
+        \vspace{-3em}
+        \caption{法国的偏自回归值随时滞的变化情况}
+        \label{images:France_ACF}
+    \end{figure}
+\end{minipage}\\\quad\\
+偏自相关PACF图呈现阻尼振荡式地突破二倍标准误差带，这种正负交变的影响，通常暗示时间序列包含周期性. 另外，从时滞$8$天起，PACF值由正转负，影响力从正相关转向负相关，这与COVID-19的潜伏期长相契合；而从时滞$14$天起，自相关程度开始显著回落至二倍标准误差带以内，有很大的置信认为此时的PACF值与$0$无异，此时相关性衰减到可以不计.
+
+　　选取更长的时滞期作图如下：\\
+\begin{minipage}{\textwidth}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\textwidth]{./images/France_PACF_2.png}
+        \vspace{-3em}
+        \caption{法国的偏自回归值随时滞的变化情况(MaxLag$=200$)}
+        \label{images:France_ACF}
+    \end{figure}
+\end{minipage}\\\quad\\
+更长时滞期的PACF图显示，在时滞$120\sim 160$天时，出现了强烈的正负相关，这暗示了周期性的产生.
+\subsection{小结}
+　　本小节的内容从一个侧面说明了COVID-19新增病例数据，可能存在一种周期性的变化趋势. 传染病形成周期性变化趋势的成因一般有：(1-)传播机制容易实现；(2-)感染后能形成一定免疫力；(3-) 病原体不断发生变异. 而周期性的长短一般取决于：(1-) 感染后免疫水平持续的时间；(2-) 病原体发生变异的速度. 鉴于目前全世界范围内SARS-CoV-2仍在广泛传播与变异，这种周期性于是便成为了一种可能. 我们已经看到的Beta, Delta, Omicron BA.1,2这些亚型的相继爆发，或许正是这种周期性的一种体现. 另外，这里尤须再次指出，严格的管控措施将有效破坏传染病的周期性特征，而周期性正是在这种未能被管控的大环境中所产生的.
+
+　　对于呈现周期性变化趋势的时间序列而言，可以进一步开展回归分析，建立回归模型进行长期预测，这对于仍处于SARS-CoV-2各种亚型盛行时期的我们而言，是一个值得研究的领域；只是现时，我们更关注在短期内疫情的发展情况，目的是为了能及时颁布政策进行管控，因此这里不再对长期性多做赘述，下面将进入对短期性的分析.
+
+　　本节相关的代码请详见\texttt{./Reports/Chapter4.mlx}.
+
+    \newpage
+    \section{短期性分析第一种路径（基于LSTM模型的预测分析）}\label{第一种路径}
+    \newpage
+    \section{短期性分析第二种路径（基于时间序列特征的谱系聚类）}\label{第二种路径}
     \newpage
     \appendix
     \section{\texttt{StatisticsAnalysis}类}\label{app:StatisticsAnalysis}
@@ -289,3 +412,6 @@ IncrementMissingMap: [343x1 logical]
 
     \section{利用有关数据可以进行的可视化}
 \end{document}
+
+
+　　另外，每日数据中包括$21$个国家的有关数据，其中Senegal在国家数据中有数据缺失，遂只对余下$20$个国家进行分析，按照大洲分类，分别是分别是Australia, Canada, Chile, China, Egypt, Ethiopia, France, Germany, Hungary, Iceland, Japan, Malaysia, Saudi Arabia, South Africa, South Korea, Sweden, Thailand, United States, 以及Zimbabwe. 
