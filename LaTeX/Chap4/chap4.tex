@@ -56,7 +56,7 @@
 	\end{align*}
 	注意到我们的数据集并不大, 这里搭建的网络也比较小, 这使得在个人电脑上进行训练成为可能.
     \subsection*{网络训练}
-    首先, 我们从不同的类别中挑出几个有代表性的国家, 这里我们的选取是 Ethiopia, Zimbabwe, Hungary, South Korea, Egypt, Australia, Canada, Iceland. 我们选取 Adam 优化器, 对上述数据训练 2000 个 epoches. 初始的学习率设置为 $0.001$, 并每 75 个 epoch 乘以 $0.95$. 定义一个 Kernel
+    首先, 我们从不同的类别中挑出几个有代表性的国家, 这里我们的选取是 China, France, Ethiopia, Zimbabwe, Hungary, South Korea, Egypt, Australia, Canada, Iceland. 我们选取 Adam 优化器, 对上述数据训练 2000 个 epoches. 初始的学习率设置为 $0.001$, 并每 75 个 epoch 乘以 $0.95$. 定义一个 Kernel
 	\[
 	\mathcal{K} =
 	\begin{bmatrix}
@@ -71,11 +71,16 @@
 	    }
 	\end{figure}
 	\subsection*{结果预测}
-	我们将得到的网络用于预测中国的新增病例数. 可以看到效果是很好的.
+	我们将得到的网络用于预测中国和法国的新增病例数. 在得到的数据中, 我们将前 $\frac{4}{5}$ 的病例数作为训练集, 将后五分之一的数据作为测试集. 可以看到效果是很好的.
 	\begin{figure}[htbp]
 	    \centering
 	    \subfigure{
 	    \includegraphics[height=8cm, width=12cm]{China_Pred.eps}
+	    }
+		\;
+		\centering
+	    \subfigure{
+	    \includegraphics[height=8cm, width=12cm]{France_Pred.eps}
 	    }
 	\end{figure}
 \end{document}
