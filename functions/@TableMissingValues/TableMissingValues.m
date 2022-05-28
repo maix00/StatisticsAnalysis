@@ -178,7 +178,7 @@ classdef TableMissingValues < handle
                             for idxx = 1: length(ON), validatestring(ON{idxx}, IAOptionsList); end
                         end
                     case 'Interpolation'
-                        IOptionsList = {'InterpolationStyle', 'InterpolationFunction'};
+                        IOptionsList = {'InterpolationStyle', 'InterpolationFunction', 'ConstantValues'};
                         for idxx = 1: length(ON), validatestring(ON{idxx}, IOptionsList); end
                     case 'ConstantValues'
                         FOptionsList = {'ConstantValues', 'ConstantValues_FirstRows', 'ConstantValues_LastRows', 'ConstantValues_Middle'};
@@ -230,8 +230,13 @@ classdef TableMissingValues < handle
                         Map = strcmp(obj.Table.Properties.VariableNames{idx}, obj.Table.Properties.VariableNames);
                         FirstLast = obj.Missing.(obj.Table.Properties.VariableNames{idx});
                         for idxx = 1: length(FirstLast)
-                            startRow = FirstLast(1)-1; endRow = FirstLast(2)+1;
-                            obj.Table = Interpolation_Helper(obj.Table, startRow, endRow, Map, Option);
+                            startRow = FirstLast{idxx}(1)-1; endRow = FirstLast{idxx}(2)+1;
+                            if all(ismissing(obj.Table(startRow:endRow, Map)))
+                                obj.Table = fillmissing(T, 'constant', Option.ConstantValues);
+                            elseif (startRow == 1) || (endRow == size(obj.Table,1))
+                            else
+                                obj.Table = Interpolation_Helper(obj.Table, startRow, endRow, Map, Option);
+                            end
                         end
                     end
                 case 'ConstantValues'
@@ -416,7 +421,9 @@ classdef TableMissingValues < handle
                          end
                 end
             elseif isempty(list(1).TopLines) && ~isempty(list(1).MiddleLines) && (list(1).MiddleLines(1) == 1)
-                if list(1).MiddleLines(end) == 1, obj.Missing.(obj.thisFixName).tpMissingBlocks = list; return; end
+                if list(1).MiddleLines(end) == 1 && ~any(strcmp(list(1).Bottom, 'l'))
+                        obj.Missing.(obj.thisFixName).tpMissingBlocks = list; return; 
+                end
                 % Define RemoveLines and Revise list (if to be filled with Constant Values)
                 switch list(1).Bottom
                     case {'o', 'r'} % for 'o', MiddleLines >= 2
@@ -509,7 +516,9 @@ classdef TableMissingValues < handle
                                                     thislistGroup.InterpolationFlag = 'C';
                                                 else
                                                     thislistGroup.GroupLines = [idxx, lastidx];
-                                                    thislistGroup.InterpolationLines = [list(idxx).MiddleLines(1)-1, list(lastidx).MiddleLines(end)];
+                                                    if list(idxx).MiddleLines(1) ~= 1
+                                                        thislistGroup.InterpolationLines = [list(idxx).MiddleLines(1)-1, list(lastidx).MiddleLines(end)];
+                                                    end
                                                     thislistGroup.InterpolationFlag = 'C';
                                                     loopBool = false;
                                                 end
@@ -537,6 +546,7 @@ classdef TableMissingValues < handle
             AdditionWhere = obj.Missing.(obj.thisFixName).AdditionWhere;
             listgroup = obj.Missing.(obj.thisFixName).MissingBlocksGroup;
             T = obj.Table;
+            flaglist = [];
             for groupidx = 1: length(listgroup)
                 if listgroup(groupidx).GroupLines(1) == listgroup(groupidx).GroupLines(end)
                     % this group has only one line in list
@@ -544,7 +554,8 @@ classdef TableMissingValues < handle
                     T = IncrementAddition_FixingHelper_Top(T, list, thislistidx, IncrementWhere, AdditionWhere);
                     T = IncrementAddition_FixingHelper_Bottom(T, list, thislistidx, IncrementWhere, AdditionWhere);
                     if ~isempty(listgroup(groupidx).InterpolationLines)
-                        T = IncrementAddition_FixingHelper_Interpolation(T, IncrementWhere, AdditionWhere, listgroup(groupidx).InterpolationLines, listgroup(groupidx).InterpolationFlag, Option);
+                        [T, flag] = IncrementAddition_FixingHelper_Interpolation(T, IncrementWhere, AdditionWhere, listgroup(groupidx).InterpolationLines, listgroup(groupidx).InterpolationFlag, Option);
+                        if flag, flaglist = [flaglist, groupidx]; end
                     end
                     T = IncrementAddition_FixingHelper_Sweep(T, list, thislistidx, IncrementWhere, AdditionWhere);
                 else
@@ -556,17 +567,35 @@ classdef TableMissingValues < handle
                     end
                 end
             end
+            if ~isempty(flaglist)
+                % Bug to be fixed
+                if length(flaglist) == 1
+                    warning('First rows were still missing. Try ConstantValues to fill in the blanks.');
+                else
+                    error('Contact Author.');
+                end
+            end
             obj.Table = IncrementAddition_FixingHelper_Rectify(T, IncrementWhere, AdditionWhere, Option);
     
             function T = IncrementAddition_FixingHelper_Top(T, list, listidx, IncrementWhere, AdditionWhere)
                 switch list(listidx).Top
-                    case 'l' % TopLines(1) ~= 1, this case was handled in IncrementAddition_FixFirstRows
+                    case 'l'
                         for rowN = list(listidx).TopLines(1): list(listidx).TopLines(end)
-                            T(rowN, IncrementWhere) = {T{rowN, AdditionWhere} - T{rowN-1, AdditionWhere}};
+                            if rowN == 1
+                                T(rowN, IncrementWhere) = T(rowN, AdditionWhere);
+                                warning([obj.thisFixName, ' First Increment copied from Addition']);
+                            else
+                                T(rowN, IncrementWhere) = {T{rowN, AdditionWhere} - T{rowN-1, AdditionWhere}};
+                            end
                         end
-                    case 'r' % TopLines(1) ~= 1, this case was handled in IncrementAddition_FixFirstRows
+                    case 'r'
                         for rowN = list(listidx).TopLines(1): list(listidx).TopLines(end)
-                            T(rowN, AdditionWhere) = {T{rowN-1, AdditionWhere} + T{rowN, IncrementWhere}};
+                            if rowN == 1
+                                T(rowN, IncrementWhere) = T(rowN, AdditionWhere);
+                                warning([obj.thisFixName, ' First Increment copied from Addition']);
+                            else
+                                T(rowN, AdditionWhere) = {T{rowN-1, AdditionWhere} + T{rowN, IncrementWhere}};
+                            end
                         end
                     case 'o' % This case was handled elsewhere mostly.
                         % For listgroup input, this should not be operated.
@@ -628,7 +657,8 @@ classdef TableMissingValues < handle
                 end
             end
     
-            function T = IncrementAddition_FixingHelper_Interpolation(T, IncrementWhere, AdditionWhere, InterpolationLines, InterpolationFlag, Option)
+            function [T,flagFirstRowAgain] = IncrementAddition_FixingHelper_Interpolation(T, IncrementWhere, AdditionWhere, InterpolationLines, InterpolationFlag, Option)
+                flagFirstRowAgain = false;
                 startRow = InterpolationLines(1);
                 endRow = InterpolationLines(end);
                 scope = endRow - startRow + 1;
@@ -646,6 +676,7 @@ classdef TableMissingValues < handle
                             tpOption.InterpolationStyle = 'Linear';
                             warning('C-interpolation using Linear style.');
                         end
+                        if startRow == 0, flagFirstRowAgain = true; return; end
                         tpT = T(startRow:endRow, IncrementWhere|AdditionWhere);
                         if find(IncrementWhere,1) < find(AdditionWhere, 1), tpIncrementWhere = 1; tpAdditionWhere = 2;
                         else, tpIncrementWhere = 2; tpAdditionWhere = 1;
@@ -813,11 +844,13 @@ classdef TableMissingValues < handle
                     T{:,AdditionWhere} = round(T{:,AdditionWhere});
                     T{1,IncrementWhere} = T{1,AdditionWhere};
                     for rowidx = 2: size(T, 1)
-                        T{rowidx, IncrementWhere} = T{rowidx, AdditionWhere} - T{rowidx-1, AdditionWhere};
+                        tp = T{rowidx, AdditionWhere} - T{rowidx-1, AdditionWhere};
+                        if ~ismissing(tp),  T{rowidx, IncrementWhere} = tp; end
                     end
                 else
                     for rowidx = 2: size(T, 1)
-                        T{rowidx, AdditionWhere} = T{rowidx-1, AdditionWhere} + T{rowidx, IncrementWhere};
+                        tp = T{rowidx-1, AdditionWhere} + T{rowidx, IncrementWhere};
+                        if ~ismissing(tp), T{rowidx, AdditionWhere} = tp; end
                     end
                 end
                 % Checking Addition
@@ -845,6 +878,7 @@ end
 
 % Helper
 function T = Interpolation_Helper(T, startRow, endRow, Map, Option)
+    if startRow == 0, error('Interpolation at Row 0'); end
     scope = endRow - startRow + 1;
     if isfield(Option, 'InterpolationStyle')
         switch Option.InterpolationStyle
