@@ -1,5 +1,5 @@
-function [XSeq_train, YSeq_train, XSeq_test, YSeq_test, muY, sigY] = Data_Preparation(country_names, ...
-                                                            smoothen)
+function [XSeq_train, YSeq_train, XSeq_test, YSeq_test, muY, sigY] = ...
+Data_Preparation(country_names, factor, smoothen)
 
 % Some preparation
 [~, properties] = Divide_types(3,6);
@@ -72,7 +72,7 @@ for t = 1:size(country_names,2)
     XSeq(2:5,:) = (XSeq(2:5,:) - muY{1,t})/sigY{1,t};
     XSeq = XSeq(:,1:end-4);
     YSeq = YSeq(:,5:end);
-    length = 0.8*size(XSeq,2);
+    length = factor*size(XSeq,2);
     XSeq_train{t, 1} = XSeq(:,1:length);
     YSeq_train{t, 1} = YSeq(:,1:length);
     XSeq_test{t, 1} = XSeq(:,length+1:end);
