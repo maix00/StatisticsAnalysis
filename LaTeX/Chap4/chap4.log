@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/W32TeX) (preloaded format=pdflatex 2020.3.17)  28 MAY 2022 03:10
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/W32TeX) (preloaded format=pdflatex 2020.3.17)  28 MAY 2022 22:50
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -881,36 +881,35 @@ LaTeX Font Info:    Try loading font information for C70+rm on input line 21.
  (d:/texlive/texlive/2019/texmf-dist/tex/latex/ctex/fd/c70rm.fd
 File: c70rm.fd 2019/04/07 v2.4.15 Chinese font definition (CTEX)
 )
-Package CJKpunct Info: use punctuation spaces for family 'rm' with punctstyle (quanjiao) on input line 30.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10.53937> on input line 31.
+(Font)              <10.53937> on input line 27.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 31.
+(Font)              <7> on input line 27.
 LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 31.
+(Font)              <5> on input line 27.
 
 
 LaTeX Font Warning: Font shape `U/rsfs/m/n' in size <10.53937> not available
-(Font)              size <10.95> substituted on input line 31.
+(Font)              size <10.95> substituted on input line 27.
 
 (d:/texlive/texlive/2019/texmf-dist/tex/generic/ctex/zhwindowsfonts.tex
 File: zhwindowsfonts.tex 2019/04/07 v2.4.15 Windows font map loader for pdfTeX and DVIPDFMx (CTEX)
 ) [1
 
 ]
-LaTeX Font Info:    Try loading font information for U+dutchcal on input line 46.
+LaTeX Font Info:    Try loading font information for U+dutchcal on input line 51.
  (d:/texlive/texlive/2019/texmf-dist/tex/latex/dutchcal/udutchcal.fd
 File: udutchcal.fd 2011/06/16 Fontinst v1.933 font definitions for U/dutchcal.
 )
 LaTeX Font Info:    Font shape `U/dutchcal/m/n' will be
-(Font)              scaled to size 10.53937pt on input line 46.
+(Font)              scaled to size 10.53937pt on input line 51.
 LaTeX Font Info:    Font shape `U/dutchcal/m/n' will be
-(Font)              scaled to size 7.0pt on input line 46.
+(Font)              scaled to size 7.0pt on input line 51.
 LaTeX Font Info:    Font shape `U/dutchcal/m/n' will be
-(Font)              scaled to size 5.0pt on input line 46.
+(Font)              scaled to size 5.0pt on input line 51.
 
-./chap4.tex:54: Undefined control sequence.
-l.54 	    \subfigure
+./chap4.tex:64: Undefined control sequence.
+l.64 	    \subfigure
                     {
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
@@ -918,14 +917,86 @@ misspelled it (e.g., `\hobx'), type `I' and the correct
 spelling (e.g., `I\hbox'). Otherwise just continue,
 and I'll forget about whatever was undefined.
 
-<trainingprocess.pdf, id=155, 1294.8375pt x 662.475pt>
-File: trainingprocess.pdf Graphic file (type pdf)
-<use trainingprocess.pdf>
-Package pdftex.def Info: trainingprocess.pdf  used on input line 55.
-(pdftex.def)             Requested size: 341.43115pt x 227.61403pt.
-./chap4.tex:62: Undefined control sequence.
-l.62 	    \subfigure
+Package epstopdf Info: Source file: <trainset.eps>
+(epstopdf)                    date: 2022-05-28 22:22:24
+(epstopdf)                    size: 104126 bytes
+(epstopdf)             Output file: <trainset-eps-converted-to.pdf>
+(epstopdf)                    date: 2022-05-28 22:25:08
+(epstopdf)                    size: 30647 bytes
+(epstopdf)             Command: <repstopdf --outfile=trainset-eps-converted-to.pdf trainset.eps>
+(epstopdf)             \includegraphics on input line 65.
+Package epstopdf Info: Output file is already uptodate.
+<trainset-eps-converted-to.pdf, id=127, 1445.4pt x 718.685pt>
+File: trainset-eps-converted-to.pdf Graphic file (type pdf)
+<use trainset-eps-converted-to.pdf>
+Package pdftex.def Info: trainset-eps-converted-to.pdf  used on input line 65.
+(pdftex.def)             Requested size: 398.33534pt x 341.44472pt.
+
+Overfull \hbox (53.33534pt too wide) in paragraph at lines 65--67
+ [][] 
+ []
+
+./chap4.tex:72: Undefined control sequence.
+l.72 	    \subfigure
                     {
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+Package epstopdf Info: Source file: <Pred2.eps>
+(epstopdf)                    date: 2022-05-28 19:11:19
+(epstopdf)                    size: 90368 bytes
+(epstopdf)             Output file: <Pred2-eps-converted-to.pdf>
+(epstopdf)                    date: 2022-05-28 22:10:54
+(epstopdf)                    size: 28157 bytes
+(epstopdf)             Command: <repstopdf --outfile=Pred2-eps-converted-to.pdf Pred2.eps>
+(epstopdf)             \includegraphics on input line 73.
+Package epstopdf Info: Output file is already uptodate.
+<Pred2-eps-converted-to.pdf, id=128, 1445.4pt x 718.685pt>
+File: Pred2-eps-converted-to.pdf Graphic file (type pdf)
+<use Pred2-eps-converted-to.pdf>
+Package pdftex.def Info: Pred2-eps-converted-to.pdf  used on input line 73.
+(pdftex.def)             Requested size: 398.33534pt x 341.44472pt.
+
+Overfull \hbox (53.33534pt too wide) in paragraph at lines 73--75
+ [][] 
+ []
+
+./chap4.tex:79: Undefined control sequence.
+l.79 	    \subfigure
+                    {
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+Package epstopdf Info: Source file: <Pred3.eps>
+(epstopdf)                    date: 2022-05-28 22:30:10
+(epstopdf)                    size: 87393 bytes
+(epstopdf)             Output file: <Pred3-eps-converted-to.pdf>
+(epstopdf)                    date: 2022-05-28 22:30:38
+(epstopdf)                    size: 27188 bytes
+(epstopdf)             Command: <repstopdf --outfile=Pred3-eps-converted-to.pdf Pred3.eps>
+(epstopdf)             \includegraphics on input line 80.
+Package epstopdf Info: Output file is already uptodate.
+<Pred3-eps-converted-to.pdf, id=133, 1445.4pt x 718.685pt>
+File: Pred3-eps-converted-to.pdf Graphic file (type pdf)
+<use Pred3-eps-converted-to.pdf>
+Package pdftex.def Info: Pred3-eps-converted-to.pdf  used on input line 80.
+(pdftex.def)             Requested size: 398.33534pt x 341.44472pt.
+
+Overfull \hbox (53.33534pt too wide) in paragraph at lines 80--82
+ [][] 
+ []
+
+Package CJKpunct Info: use punctuation spaces for family 'rm' with punctstyle (quanjiao) on input line 86.
+[2] [3 <./trainset-eps-converted-to.pdf>] [4 <./Pred2-eps-converted-to.pdf>] [5 <./Pred3-eps-converted-to.pdf>]
+./chap4.tex:109: Undefined control sequence.
+l.109 	    \subfigure
+                     {
 The control sequence at the end of the top line
 of your error message was never \def'ed. If you have
 misspelled it (e.g., `\hobx'), type `I' and the correct
@@ -939,24 +1010,52 @@ Package epstopdf Info: Source file: <Pred.eps>
 (epstopdf)                    date: 2022-05-28 03:09:11
 (epstopdf)                    size: 35699 bytes
 (epstopdf)             Command: <repstopdf --outfile=Pred-eps-converted-to.pdf Pred.eps>
-(epstopdf)             \includegraphics on input line 63.
+(epstopdf)             \includegraphics on input line 110.
 Package epstopdf Info: Output file is already uptodate.
-<Pred-eps-converted-to.pdf, id=157, 1445.4pt x 718.685pt>
+<Pred-eps-converted-to.pdf, id=208, 1445.4pt x 718.685pt>
 File: Pred-eps-converted-to.pdf Graphic file (type pdf)
 <use Pred-eps-converted-to.pdf>
-Package pdftex.def Info: Pred-eps-converted-to.pdf  used on input line 63.
+Package pdftex.def Info: Pred-eps-converted-to.pdf  used on input line 110.
 (pdftex.def)             Requested size: 398.33534pt x 341.44472pt.
 
-Overfull \hbox (53.33534pt too wide) in paragraph at lines 63--65
+Overfull \hbox (53.33534pt too wide) in paragraph at lines 110--112
  [][] 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 66.
-[2] [3 <./trainingprocess.pdf>] [4 <./Pred-eps-converted-to.pdf>]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 66.
+./chap4.tex:116: Undefined control sequence.
+l.116 	    \subfigure
+                     {
+The control sequence at the end of the top line
+of your error message was never \def'ed. If you have
+misspelled it (e.g., `\hobx'), type `I' and the correct
+spelling (e.g., `I\hbox'). Otherwise just continue,
+and I'll forget about whatever was undefined.
+
+Package epstopdf Info: Source file: <Pred4.eps>
+(epstopdf)                    date: 2022-05-28 22:48:27
+(epstopdf)                    size: 24738 bytes
+(epstopdf)             Output file: <Pred4-eps-converted-to.pdf>
+(epstopdf)                    date: 2022-05-28 22:50:11
+(epstopdf)                    size: 10283 bytes
+(epstopdf)             Command: <repstopdf --outfile=Pred4-eps-converted-to.pdf Pred4.eps>
+(epstopdf)             \includegraphics on input line 117.
+Package epstopdf Info: Output file is already uptodate.
+<Pred4-eps-converted-to.pdf, id=210, 1445.4pt x 718.685pt>
+File: Pred4-eps-converted-to.pdf Graphic file (type pdf)
+<use Pred4-eps-converted-to.pdf>
+Package pdftex.def Info: Pred4-eps-converted-to.pdf  used on input line 117.
+(pdftex.def)             Requested size: 398.33534pt x 341.44472pt.
+
+Overfull \hbox (53.33534pt too wide) in paragraph at lines 117--119
+ [][] 
+ []
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 121.
+[6] [7 <./Pred-eps-converted-to.pdf>] [8 <./Pred4-eps-converted-to.pdf>]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 121.
  (./chap4.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 66.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 66.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 121.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 121.
 Package rerunfilecheck Info: File `chap4.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 
@@ -964,24 +1063,24 @@ Package rerunfilecheck Info: File `chap4.out' has not changed.
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 0.41063pt have occurred.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 66.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 121.
  ) 
 Here is how much of TeX's memory you used:
- 23860 strings out of 494007
- 413478 string characters out of 6164938
- 428520 words of memory out of 5000000
- 27204 multiletter control sequences out of 15000+600000
- 592761 words of font info for 152 fonts, out of 8000000 for 9000
+ 24024 strings out of 494007
+ 416211 string characters out of 6164938
+ 429520 words of memory out of 5000000
+ 27315 multiletter control sequences out of 15000+600000
+ 605092 words of font info for 188 fonts, out of 8000000 for 9000
  286 hyphenation exceptions out of 8191
- 42i,10n,63p,546b,357s stack positions out of 5000i,500n,10000p,200000b,80000s
-<c:/Windows/Fonts/simsun.ttc>{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}<c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf>{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}<c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><
-c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fon
-ts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/dutchcal/DutchCalReg.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmbx12.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmex10.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmmi10.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmr10.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmr17.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmr7.pfb><d:
-/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmsy10.pfb>
-Output written on chap4.pdf (4 pages, 588530 bytes).
+ 42i,10n,63p,532b,372s stack positions out of 5000i,500n,10000p,200000b,80000s
+<c:/Windows/Fonts/simsun.ttc>{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}<c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc>{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}<c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc>{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}<c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/
+Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc>{d:/texlive/texlive/2019/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}<c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fon
+ts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simsun.ttc><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><c:/Windows/Fonts/simhei.ttf><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/dutchcal/DutchCalReg.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmbx10.pfb><d:/texlive/texlive/2019/
+texmf-dist/fonts/type1/public/lm/lmbx12.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmex10.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmmi10.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmr10.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmr17.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmr7.pfb><d:/texlive/texlive/2019/texmf-dist/fonts/type1/public/lm/lmsy10.pfb>
+Output written on chap4.pdf (8 pages, 603134 bytes).
 PDF statistics:
- 478 PDF objects out of 1000 (max. 8388607)
- 306 compressed objects within 4 object streams
- 10 named destinations out of 1000 (max. 500000)
- 255 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 552 PDF objects out of 1000 (max. 8388607)
+ 364 compressed objects within 4 object streams
+ 13 named destinations out of 1000 (max. 500000)
+ 274 words of extra memory for PDF output out of 10000 (max. 10000000)
 
