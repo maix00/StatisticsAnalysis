@@ -1,0 +1,242 @@
+FENAME,location
+Afghanistan,Afghanistan
+Albania,Albania
+American Samoa,Samoa
+Andorra,Andorra
+Angola,Angola
+Anguilla,Anguilla
+Antarctica,
+Antigua and Barbuda,Antigua and Barbuda
+Arab Republic of Egypt,Egypt
+Area Under Dispute,
+Argentina,Argentina
+Aruba,Aruba
+Barbados,Barbados
+Belize,Belize
+Bermuda,Bermuda
+Bosnia and Herzegovina,Bosnia and Herzegovina
+Bouvet Island,
+British Indian Ocean Territory,
+British Virgin Islands,British Virgin Islands
+Brunei Darussalam,Brunei
+Burkina Faso,Burkina Faso
+Canada,Canada
+Cayman Islands,Cayman Islands
+Central African Republic,Central African Republic
+Christmas Island,
+Clipperton Island,
+Cocos (Keeling) Islands,
+Commonwealth of Australia,Australia
+Commonwealth of Dominica,Dominica
+Commonwealth of the Bahamas,Bahamas
+Commonwealth of the Northern Mariana Isl,Northern Mariana Islands
+Comoros,Comoros
+Cook Islands,Cook Islands
+Czech Republic,Czechia
+Democratic People,
+Democratic People,
+Democratic Republic of Congo,Democratic Republic of Congo
+Democratic Republic of Sao Tome and Prin,Sao Tome and Principe
+Democratic Socialist Republic of Sri Lan,Sri Lanka
+Dominican Republic,Dominican Republic
+East Timor,Timor
+Estonia,Estonia
+Falkland Islands (Malvinas),Falkland Islands
+Faroe Islands, Faeroe Islands
+Federal Democratic Republic of Ethiopia,Ethiopia
+Federal Republic of Germany,Germany
+Federal Republic of Nigeria,Nigeria
+Federated States of Micronesia,Micronesia (country)
+Federation of Saint Kitts and Nevis,Saint Kitts and Nevis
+Federative Republic of Brazil,Brazil
+France Republic,France
+French Guiana,
+French Polynesia,French Polynesia
+French Southern Territories,
+Gabonese Republic,Gabon
+Georgia,Georgia
+Gibraltar,Gibraltar
+Grand Duchy of Luxembourg,Luxembourg
+Great Socialist People,Libya
+Greenland,Greenland
+Grenada,Grenada
+Guadeloupe,
+Guyana,Guyana
+Hashemite Kingdom of Jordan,Jordan
+Heard Island and McDonald Islands,
+Hellenic Republic,Greece
+Independent State of Papua New Guinea,Papua New Guinea
+Independent State of Samoa,Samoa
+Ireland,Ireland
+Islamic Republic of Iran,Iran
+Islamic Republic of Mauritania,Mauritania
+Islamic Republic of Pakistan,Pakistan
+Italian Republic,Italy
+Jamaica,Jamaica
+Japan,Japan
+Kingdom of Belgium,Belgium
+Kingdom of Bhutan,Bhutan
+Kingdom of Cambodia,Cambodia
+Kingdom of Denmark,Denmark
+Kingdom of Lesotho,Lesotho
+Kingdom of Morocco,Morocco
+Kingdom of Nepal,Nepal
+Kingdom of Norway,Norway
+Kingdom of Saudi Arabia,Saudi Arabia
+Kingdom of Spain,Spain
+Kingdom of Spain,
+Kingdom of Swaziland,Eswatini
+Kingdom of Sweden,Sweden
+Kingdom of Thailand,Thailand
+Kingdom of Tonga,Tonga
+Kingdom of the Netherlands,Netherlands
+Kyrgyz　Republic,Kyrgyzstan
+Lao People,Laos
+Lebanese Republic,Lebanon
+Malaysia,Malaysia
+Martinique,
+Mayotte,
+Mongolia,Mongolia
+Montserrat,Montserrat
+Netherlands Antilles,Netherlands
+New Caledonia,New Caledonia
+New Zealand,New Zealand
+Niue,Niue
+Norfolk Island,
+Oriental Republic of Uruguay,Uruguay
+People,
+Peoples Republic of China,China
+Pitcairn,Pitcairn
+Portuguess Republic,Portugal
+Portuguess Republic,Portugal
+Prince Edward Island,
+Principality of Liechtenstein,Liechtenstein
+Principality of Monaco,Monaco
+Puerto Rico,Puerto Rico
+Reoublic of Montenegro,Montenegro
+Repubic of Belarus,Belarus
+Republic of Armenia,Armenia
+Republic of Austria,Austria
+Republic of Azerbaijan,Azerbaijan
+Republic of Benin,Benin
+Republic of Bolivia,Bolivia
+Republic of Botswana,Botswana
+Republic of Bulgaria,Bulgaria
+Republic of Burundi,Burundi
+Republic of Cameroon,Cameroon
+Republic of Cape Verde,Cape Verde
+Republic of Chad,Chad
+Republic of Chile,Chile
+Republic of Colombia,Colombia
+Republic of Colombia,Colombia
+Republic of Congo,Congo
+Republic of Costa Rica,Costa Rica
+Republic of Cote d’Ivoire,Cote d'Ivoire
+Republic of Croatia,Croatia
+Republic of Cuba,Cuba
+Republic of Cyprus,Cyprus
+Republic of Djibouti,Djibouti
+Republic of Ecuador,Ecuador
+Republic of El Salvador,El Salvador
+Republic of Equatorial Guinea,Equatorial Guinea
+Republic of Fiji Islands,Fiji
+Republic of Finland,Finland
+Republic of Ghana,Ghana
+Republic of Guatemala,Guatemala
+Republic of Guinea,Guinea
+Republic of Guinea-Bissau,Guinea-Bissau
+Republic of Haiti,Haiti
+Republic of Honduras,Honduras
+Republic of Hungary,Hungary
+Republic of Iceland,Iceland
+Republic of India,India
+Republic of Indonesia,Indonesia
+Republic of Iraq,Iraq
+Republic of Kazakhstan,Kazakhstan
+Republic of Kenya,Kenya
+Republic of Kiribati,Kiribati
+Republic of Korea,South Korea
+Republic of Latvia,Latvia
+Republic of Liberia,Liberia
+Republic of Lithuania,Lithuania
+Republic of Madagascar,Madagascar
+Republic of Malawi,Malawi
+Republic of Maldives,Maldives
+Republic of Mali,Mali
+Republic of Malta,Malta
+Republic of Mauritius,Mauritius
+Republic of Moldova,Moldova
+Republic of Mozambique,Mozambique
+Republic of Namibia,Namibia
+Republic of Nauru,Nauru
+Republic of Nicaragua,Nicaragua
+Republic of Niger,Niger
+Republic of Palau,Palau
+Republic of Panama,Panama
+Republic of Paraguay,Paraguay
+Republic of Peru,Peru
+Republic of Philippines,Philippines
+Republic of Poland,Poland
+Republic of Rwanda,Rwanda
+Republic of San Marino,San Marino
+Republic of Senegal,Senegal
+Republic of Serbia,Serbia
+Republic of Seychelles,Seychelles
+Republic of Sierra Leone,Sierra Leone
+Republic of Singapore,Singapore
+Republic of Slovenia,Slovenia
+Republic of South Africa,South Africa
+Republic of Suriname,Suriname
+Republic of Tajikistan,Tajikistan
+Republic of Togo,Togo
+Republic of Trinidad and Tobago,Trinidad and Tobago
+Republic of Tunisia,Tunisia
+Republic of Turkey,Turkey
+Republic of Uganda,Uganda
+Republic of Uzbekistan,Uzbekistan
+Republic of Vanuatu,Vanuatu
+Republic of Venezuela,Venezuela
+Republic of Yemen,Yemen
+Republic of Zambia,Zambia
+Republic of Zimbabwe,Zimbabwe
+Republic of the Gambia,Gambia
+Republic of the Marshall Islands,Marshall Islands
+Reunion,
+Romania,Romania
+Russian Federation,Russia
+Saint Lucia,Saint Lucia
+Saint Pierre and Miquelon,Saint Pierre and Miquelon
+Saint Vincent and the Grenadines,Saint Vincent and the Grenadines
+Saubt Helena,Saint Helena
+Slovakia Republic,Slovakia
+Socialist Republic of Viet Nam,Vietnam
+Solomon Islands,Solomon Islands
+Somalia Republic,Somalia
+South Georgia and the South Sandwich Isl,
+State of Bahrain,Bahrain
+State of Eritrea,Eritrea
+State of Israel,Israel
+State of Kuwait,Kuwait
+State of Qatar,Qatar
+Sultanate of Oman,Oman
+Svalbard and Jan Mayen,
+Switzerland,Switzerland
+Syrian Arab Republic,Syria
+The former Yugoslav Republic of Macedoni,North Macedonia
+Tokelau,Tokelau
+Turkmenistan,Turkmenistan
+Turks and Caicos Islands,Turks and Caicos Islands
+Tuvalu,Tuvalu
+Ukraine,Ukraine
+Union of Myanmar,Myanmar
+United Arab Emirates,United Arab Emirates
+United Kingdom of Great Britain and Nort,United Kingdom
+United Republic of Tanzania,Tanzania
+United States Of America,United States
+United States Of America,United States
+United States Of America,United States
+United States of Mexico,Mexico
+Vatican City State,Vatican
+Virgin Islands of the United States,United States Virgin Islands
+Wallis and Futuna,Wallis and Futuna
+Western Sahara,

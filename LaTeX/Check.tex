@@ -120,15 +120,14 @@
         \end{itemize}
         }
         \end{adjustwidth}
-        \vspace{5pt}
-        \url{https://www.it610.com/article/1515470890224123904.htm}.
+        %\url{https://www.it610.com/article/1515470890224123904.htm}.
 
         \subsection{说明}
         　　因为疫情的关系，我们两位同学，不得不线上联系，我们也因此第一次尝试使用github平台. 仓库网址为\url{https://github.com/maix00/StatisticsAnalysis}. 在那里，我们利用MATLAB的面向对象编程，编写了一个类\texttt{StatisticsAnalysis}，用于辅助导入数据、检索表格、缺失值处理等，这在本文中会被用到，用到时我们会详细说明.
 
-        　　本文的第\ref{数据的导入}节、第\ref{数据的缺失值处理}节将分别涉及数据的导入与缺失值处理中遇到的问题；第\ref{自相关分析}节进行自相关分析；第节、第节分别涉及上述两种不同路径的分析. 
+        　　本文的第\ref{数据的导入}节、第\ref{数据的缺失值处理}节将分别涉及数据的导入与缺失值处理中遇到的问题；第\ref{自相关分析}节进行自相关分析；第节、第节分别涉及上述两种不同路径的分析；第\ref{可视化}探索其他可能的数据可视化与数据分析.
         
-        　　附录部分，附录\ref{app:StatisticsAnalysis}给出关于类\texttt{StatisticsAnalysis}的详细说明，附录探索其他可能的数据可视化.
+        　　附录部分，附录\ref{app:StatisticsAnalysis}给出关于类\texttt{StatisticsAnalysis}的详细说明.
 
         　　祝阅读愉快！
     
@@ -139,7 +138,8 @@
             \item [1.] 以每日数据的\texttt{new\_vaccinations}与\texttt{total\_vaccinations}变量为例. 由于疫情发生初期长时间没有此类数据，\texttt{detectImportOptions}函数探测认为，此变量的变量类型是为\texttt{char}，因此需要手动将导入参数修改为\texttt{double}.
             \item [2.] 在导入每日数据时，通常最后需要检索出某个国家、某个时间段的数据，目的是形成时序数据. 为此，MATLAB可以通过括号索引检索，但是不同类型的数据检索的方式不同，不是很便利，没有专门的检索函数可以使用.
         \end{enumerate}
-        为了解决上面发现的问题，并寄希望于能在单一函数中解决全部的导入与检索问题，我们利用MATLAB面向对象变成，编写了类\texttt{StatisticsAnalysis}. 比如，我们想要导入法国在2020年的新增与累计接种疫苗人次——
+        为了解决上面发现的问题，并寄希望于能在单一函数中解决全部的导入与检索问题，我们利用MATLAB面向对象变成，编写了类\texttt{StatisticsAnalysis}. {\color{red}
+        \kaishu 注意：使用时请添加路径，或者在MATLAB中打开\texttt{./Project.prj}以自动添加路径.} 比如，我们想要导入法国在2020年的新增与累计接种疫苗人次——
 \begin{matlabcode}
 daily_SA = StatisticsAnalysis( ...
     'TablePath', './data/COVID19/daily_info.csv', ...
@@ -169,9 +169,8 @@ daily2 = daily_SA.Update('ImportOptions', { ...
 
     \newpage
     \section{数据的缺失值处理}\label{数据的缺失值处理}
-        \subsection{对国家数据的缺失值探测、处理}
+    　　本节相关的代码请详见\texttt{./Reports/Chapter3.mlx}.
         \subsection{对每日数据的缺失值探测、处理}
-        \subsubsection{问题的发现与解决}
         在每日数据中，我们发现如下问题：
         \begin{enumerate}
             \item [1.] 在疫情发展初期，一些变量有很多缺失值，可以删除行，一些情况下也可以填充为$0$.
@@ -185,31 +184,33 @@ daily2 = daily_SA.Update('ImportOptions', { ...
                 \end{enumerate}
         \end{enumerate}
         为了解决这些问题，我们编写了\texttt{TableMissingValues.m}，可以用来分析缺失值的分布，在这之后再经过人工判断，可以选择不同的参数，以恢复数据. 我们也将这个功能整合到了类\texttt{StatisticsAnalysis}中. 下面举一个例子来阐述其用法. 例如对法国在2020年的新增与累计病例数进行缺失值处理，我们只需在上文的基础上——
-\begin{spacing}{0.7}
 \begin{matlabcode}
 daily_SA.MissingValuesReport
 \end{matlabcode}
+\begin{spacing}{0.8}
 \begin{matlaboutput}
 ans = 
         Map: [343x3 logical]
        date: {}
-  new_cases: {[72 72] [75 75] [91 91] [97 97] [122 122] [131 132] [157 157] [286 286]}
+  new_cases: {[72 72] [75 75] [91 91] [97 97] [122 122] [131 132] [157 157] 
+              [286 286]}
 total_cases: {}
 \end{matlaboutput}
 \end{spacing}
 可见数据中只有新增数据缺失，接着——
 \begin{matlabcode}
-MissingValuesOptions = { {'new_cases', 'total_cases'}, 'Increment-Addition', ...
+MVO = { {'new_cases', 'total_cases'}, 'Increment-Addition', ...
         {'InterpolationStyle','LinearRound', ...
         'RemoveFirstRows',false,'RemoveLastRows',false}
     };
 daily2 = daily_SA.Update('MissingValuesOptions', MVO).TimeTable;
 \end{matlabcode}
 这里缺省使用了上文所述的指数衰减，因为其总量数据不单调. 更多的缺失值信息可以通过下面的方法获取——
-\begin{spacing}{0.7}
+
 \begin{matlabcode}
 daily_SA.MissingValuesReport.increment_addition_new_cases_total_cases
 \end{matlabcode}
+\begin{spacing}{0.8}
 \begin{matlaboutput}
 ans = 
           Increment: 'new_cases'
@@ -226,12 +227,61 @@ IncrementMissingMap: [343x1 logical]
 \end{matlaboutput}
 \end{spacing}
 另外，自定义的插值、衰减函数可以通过参数用函数句柄导入. 更多的信息请参见附录\ref{app:StatisticsAnalysis}. 
-    \subsubsection{缺失值探测与处理报告}
+    \subsection{对国家数据的缺失值探测}
+        原本希望能对国家数据进行缺失值分布，方法是利用无缺的变量先进行聚类分析，然后对处于同一类中的某一国家的某一变量的缺失值，赋值该类国家该变量的平均值. 但是，经过缺失值探测，我们发现，并没有这样的无缺变量——
+\begin{matlabcode}
+country_SA = StatisticsAnalysis('TablePath', path_country);
+country_SA.MissingValuesReport
+\end{matlabcode}
+\begin{spacing}{0.8}
+\begin{matlaboutput}
+ans = 
+                               Map: [229x13 logical]
+                          location: {}
+                         continent: {}
+                        population: {[151 151]}
+                population_density: {1x17 cell}
+                        median_age: {1x32 cell}
+                     aged_65_older: {1x33 cell}
+                     aged_70_older: {1x33 cell}
+                    gdp_per_capita: {1x30 cell}
+                      male_smokers: {1x50 cell}
+                    female_smokers: {1x49 cell}
+             cardiovasc_death_rate: {1x33 cell}
+        hospital_beds_per_thousand: {1x49 cell}
+                   life_expectancy: {1x5 cell}
+\end{matlaboutput}
+\end{spacing}
+    进一步对各个国家缺失值数量进行统计并作图.\\
+    \begin{minipage}{\textwidth}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.85\textwidth]{./images/MissingValues_Country.png}
+            \caption{国家数据中各国家的缺失值数量统计}
+            \label{images:MissingValues_Country}
+        \end{figure}
+    \end{minipage}\\\quad\\
+    因此，$229$条国家数据中，无缺的只有$128$条，之后如果需要进行聚类分析，需要考虑到此种情况. 
     
+    　　另外，每日数据中包括$21$个国家的有关数据，其中Senegal在国家数据中有数据缺失，遂可以只对余下$20$个国家进行分析，按照大洲分类，分别是
+    \vspace{5pt}
+    \begin{adjustwidth}{1cm}{0cm}
+    {\kaishu
+    \begin{itemize}[itemsep=-1pt,topsep=1pt]
+        \item [大洋洲:] Australia;
+        \item [北美洲:]Canada, United States;
+        \item [南美洲:]Chile;
+        \item [亚洲:]China, Japan, Malaysia, Saudi Arabia, South Korea, Thailand;
+        \item [非洲:]Egypt, Ethiopia, South Africa, Zimbabwe;
+        \item [欧洲:]France, Germany, Hungary, Iceland, Sweden.
+    \end{itemize}
+    }
+    \end{adjustwidth}
+
     \newpage
     %https://max.book118.com/html/2021/0813/6110100143003231.shtm
     \section{长期性分析（自相关分析与周期性特征）}\label{自相关分析}
-        　　在这一节，我们尝试解答以下疑问：
+        　　本节相关的代码请详见\texttt{./Reports/Chapter4.mlx}. 在这一节，我们尝试解答以下疑问：
         \begin{enumerate}
             \item [1.] COVID-19每日新增病例数据，究竟是一种怎样的时间序列数据？
             \item [2.] 最近有研究指出，SARS-CoV-2更具传染力的新毒株，似乎呈现每隔半年出现一次的周期性，接近其他一些传染病周期性爆发的趋势，这是否能从以上数据中得到某种预见？
@@ -303,12 +353,115 @@ IncrementMissingMap: [343x1 logical]
 
 　　对于呈现周期性变化趋势的时间序列而言，可以进一步开展回归分析，建立回归模型进行长期预测，这对于仍处于SARS-CoV-2各种亚型盛行时期的我们而言，是一个值得研究的领域；只是现时，我们更关注在短期内疫情的发展情况，目的是为了能及时颁布政策进行管控，因此这里不再对长期性多做赘述，下面将进入对短期性的分析.
 
-　　本节相关的代码请详见\texttt{./Reports/Chapter4.mlx}.
-
     \newpage
     \section{短期性分析第一种路径（基于LSTM模型的预测分析）}\label{第一种路径}
+    　　本节相关的代码请详见\texttt{./Reports/Chapter5.mlx}以及\texttt{./src}的相关集成函数.
+
+    　　前文提到，$229$条国家数据中，无缺的只有$128$条，下面我们就先利用这些数据进行聚类分析. 其次，我们将基于LSTM模型，对每日数据中涉及的$20$个无缺数据国家进行建模，以及预测分析.
+    \subsection{聚类分析}
+        
+    \subsection{构建模型}
+    \subsection{预测分析}
     \newpage
     \section{短期性分析第二种路径（基于时间序列特征的谱系聚类）}\label{第二种路径}
+    \subsection{构造特征}
+    \subsection{聚类分析}
+    \subsection{政策建议}
+    \newpage
+    \section{其他的数据可视化与初步分析}\label{可视化}
+    　　本节相关的代码请详见\texttt{./Reports/Chapter7.mlx}
+    \subsection{Example 1: 每日新增病例与每日新增接种的综合分析}
+        以法国的数据为例，利用\texttt{stackedplot}函数，作图如下：\\
+        \begin{minipage}{\textwidth}
+            \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.9\textwidth]{./images/France_CasesAndVaccinations.png}
+                \vspace{-1.5em}
+                \caption{法国的每日新增病例与每日新增接种}
+                \label{images:France_CasesAndVaccinations}
+            \end{figure}
+        \end{minipage}\\\quad\\
+        我们知道，利用接种疫苗的方式，能在一定时间内降低易感人群感染的可能，但随着病原体不断变异，免疫逃逸现象随即产生，因此，新增接种数据与新增病例数据间可能存在的负相关性，也必定会随着时间的推进而趋于消失. 疫苗给人带来的免疫效果，究竟能延续多长时间，需要更多的数据进行分析. 这里，我们只是能从图中直接读出一定的负相关性.
+        
+    \subsection{Example 2: 缺失值处理前后累计病例数据的对比图像}
+        仍以法国的数据为例. {\kaishu 本文行文中广泛选取法国数据为例的原因是，法国的数据有多次更正的情况，使得累计数据多个位点不单调，也使得对应日的新增数据缺失.}首先，作缺失值处理后图\ref{images:France_CasesAndVaccinations}的改变情况.\\
+        \begin{minipage}{\textwidth}
+            \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.9\textwidth]{./images/France_CasesAndVaccinations_2.png}
+                \vspace{-1.5em}
+                \caption{法国的每日新增病例与每日新增接种（缺失值处理）}
+                \label{images:France_CasesAndVaccinations_2}
+            \end{figure}
+        \end{minipage}\\\quad\\
+        可见疫情开始初期的一些断点已经相连. 然后对累计病例数据作图，上图是处理前的数据，下图是处理后的数据.\\
+        \begin{minipage}{\textwidth}
+            \begin{figure}[H]
+                \centering
+                \includegraphics[width=0.88\textwidth]{./images/France_TotalCases.png}
+                \vspace{-1.5em}
+                \caption{法国的累计病例（缺失值处理）}
+                \label{images:France_TotalCases}
+            \end{figure}
+        \end{minipage}\\\quad\\
+        可见不单调的情况已被改善. 这里采用了节\ref{数据的缺失值处理}中提到的衰减分配. 根据不同的模型，可以选择不同的缺失值处理方式，这里不再赘述.
+    \subsection{Example 3: ICU患者占全体住院患者的比例变化趋势}
+    仍以法国的数据为例. \\
+    \begin{minipage}{\textwidth}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\textwidth]{./images/France_ICU_Hospital.png}
+            \vspace{-2em}
+            \caption{法国的ICU患者占全体住院患者的比例变化趋势}
+            \label{images:France_ICU_Hospital}
+        \end{figure}
+    \end{minipage}\\\quad\\
+    住院患者数、重症监护患者数都是疫情严重程度的指标，而两者之比则可以反映优势病株的毒性. 图中可见，
+    \begin{enumerate}
+        \item [(1-)] 在先前多波疫情中，此三者的峰值点与新增病例数据的趋同；
+        \item [(2-)] 在疫苗广泛接种之后的一段时期内，前两者的峰值均下降，但两者之比的峰值反而抬升（{\kaishu 这意谓着这段时期内，一些轻症患者因为疫苗接种而避免了住院}）；
+        \item [(3-)] 而在最近的疫情中，住院患者数跟随新增病例数据出现峰值，重症监护患者数小幅抬升，但两者之比近乎趋于$0$，可见优势病株的毒性正在减弱. 关于毒性减弱的度量，更进一步的分析需要更多的数据支持.
+    \end{enumerate}
+    \subsection{Example 4: 不同国家的检测阳性率（占比）变化趋势}
+    阳性率（positive rate）是在特定地区的核酸检测中有多少份额确诊. 当一个地区的阳性测试率较低时，说明这些国家为防止疫情大规模爆发做出了很多努力；而当阳性率较高时，这通常意味着感染的真实数量可能远远高于确诊病例数.
+
+    　　为了能对此项数据有更直观的认识，我们先对其进行了可视化:\\
+    \begin{minipage}{\textwidth}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=1.1\textwidth]{./images/PositiveRate_1.png}
+            \vspace{-2.5em}
+            \caption{各国阳性率变化趋势}
+            \label{images:PositiveRate_1}
+        \end{figure}
+    \end{minipage}\\\quad\\
+    图中可以看到，阳性率变化呈现多个峰值，稍加对比可知这些峰值与新增病例数据的趋同，确能表征疫情的严重程度；且在最近一段时期，一些国家的阳性率大幅上升. 
+
+    　　按月分组取最大值作图如下，可以看出每个月份，在这$21$个国家中，疫情相对更严重的国家变化:\\
+    \begin{minipage}{\textwidth}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\textwidth]{./images/PositiveRate_3.png}
+            \vspace{-1.5em}
+            \caption{各国阳性率变化趋势对比}
+            \label{images:PositiveRate_3}
+        \end{figure}
+    \end{minipage}\\ \quad\\\newpage
+    　　计算各国历时的最大阳性率，能够表征该国历时的疫情严重程度:\\
+    \begin{minipage}{\textwidth}
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=\textwidth]{./images/PositiveRate_2.png}
+            \caption{各国历时最大阳性率}
+            \label{images:PositiveRate_2}
+        \end{figure}
+    \end{minipage}\\\quad\\
+    由于加大检测量能够有效降低阳性率，因此不同国家的新增病例变化与阳性率变化情况有所不同，所以阳性率可以作为对不同国家疫情发展模式分类的一个不同于新增病例的指标. 
+    \vspace{5cm}
+    \begin{center}
+    以上就是我们对COVID-19数据集的分析, 水平有限, 多有疏漏, 恳请各位指正. \\
+    最后, 感谢陈阳老师和两位助教一学期以来的指导与帮助!
+    \end{center}
     \newpage
     \appendix
     \section{\texttt{StatisticsAnalysis}类}\label{app:StatisticsAnalysis}
@@ -410,8 +563,6 @@ IncrementMissingMap: [343x1 logical]
 
     注：检索功能引用了\texttt{./function/selecttable.m}与MATLAB内置类\texttt{timerange}，缺失值修正引用了\texttt{./function/@TableMissingValues}. 更新各种参数可以使用类方法\texttt{Update}.
 
-    \section{利用有关数据可以进行的可视化}
 \end{document}
 
 
-　　另外，每日数据中包括$21$个国家的有关数据，其中Senegal在国家数据中有数据缺失，遂只对余下$20$个国家进行分析，按照大洲分类，分别是分别是Australia, Canada, Chile, China, Egypt, Ethiopia, France, Germany, Hungary, Iceland, Japan, Malaysia, Saudi Arabia, South Africa, South Korea, Sweden, Thailand, United States, 以及Zimbabwe. 
