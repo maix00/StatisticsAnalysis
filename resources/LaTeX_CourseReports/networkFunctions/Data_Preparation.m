@@ -1,6 +1,7 @@
 function [XSeq_train, YSeq_train, XSeq_test, YSeq_test, muY, sigY] = ...
 Data_Preparation(country_names, factor, smoothen)
 
+if nargin == 2, smoothen = true; end
 % Some preparation
 [~, properties] = Divide_types(3,6);
 
@@ -16,7 +17,7 @@ for t = 1:size(country_names,2)
     country_name = country_names{1,t};
 
     % Load Data: pandemic data
-    path_daily = './data/COVID19/daily_info.csv';
+    path_daily = './testdata/COVID19/daily_info.csv';
     data = StatisticsAnalysis( ...
         'TablePath', path_daily, ...
         'ImportOptions', { ...

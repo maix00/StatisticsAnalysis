@@ -737,7 +737,7 @@ function T = Interpolation_Helper(T, startRow, endRow, Map, Option)
                     tpT(tpStartRow-startRow+1:tpEndRow-startRow+1) = [];
                     T{tpStartRow:tpEndRow, Map} = InterpolationStyle(arr1, tpT, arr2);
                 catch
-                    error('InterpolationStyle not supported. Syntax: T{startRow+1,endRow-1,VariableMap} = @InterpolationStyle(x_value, y_value, interpolation_value).');
+                    error('InterpolationStyle not supported. Syntax: T{startLines,endLines,VariableMap} = @InterpolationStyle(x_value, y_value, interpolation_value).');
                 end
         end
     elseif isfield(Option, 'InterpolationFunction')
